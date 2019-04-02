@@ -10,15 +10,15 @@ class Matrix4f
 
     public:
         Matrix4f();
-        Matrix4f(float **m);
-        Matrix4f initIdentity();
-        Matrix4f initScreenSpaceTransform(float halfWidth, float halfHeight);
-        Matrix4f initTranslation(float x, float y, float z);
-        Matrix4f initRotation(float x, float y, float z, float angle);
-        Matrix4f initRotation(float x, float y, float z);
-        Matrix4f initScale(float x, float y, float z);
-        Matrix4f initPerspective(float fov, float aspect_ratio, float z_near, float z_far);
-        Matrix4f initOrthographic(float left, float right, float bottom, float top, float near, float far);
+        Matrix4f(const Matrix4f &obj);
+        void initIdentity();
+        void initScreenSpaceTransform(float halfWidth, float halfHeight);
+        void initTranslation(float x, float y, float z);
+        void initRotation(float x, float y, float z, float angle);
+        void initRotation(float x, float y, float z);
+        void initScale(float x, float y, float z);
+        void initPerspective(float fov, float aspect_ratio, float z_near, float z_far);
+        void initOrthographic(float left, float right, float bottom, float top, float near, float far);
         Matrix4f initRotation(Vector4f forward, Vector4f up);
         Matrix4f initRotation(Vector4f forward, Vector4f up, Vector4f right);
         Vector4f transform(Vector4f r);

@@ -33,13 +33,13 @@ class OBJModel
                                 cout << " Normals Index: " << m_normals_index;
                                 cout << endl;}
 
-            setPositionsIndex(int positions_index) { m_positions_index = positions_index;}
-            setTexCoordsIndex(int texCoords_index) { m_texCoords_index = texCoords_index;}
-            setNormalsIndex(int normals_index) { m_normals_index = normals_index;}
+            void setPositionsIndex(int positions_index) { m_positions_index = positions_index;}
+            void setTexCoordsIndex(int texCoords_index) { m_texCoords_index = texCoords_index;}
+            void setNormalsIndex(int normals_index) { m_normals_index = normals_index;}
 
-            getPositionsIndex() { return m_positions_index;}
-            getTexCoordsIndex() { return m_texCoords_index;}
-            getNormalsIndex() { return m_normals_index;}
+            int getPositionsIndex() { return m_positions_index;}
+            int getTexCoordsIndex() { return m_texCoords_index;}
+            int getNormalsIndex() { return m_normals_index;}
     };
 
     bool m_has_normals;
@@ -69,7 +69,10 @@ class OBJModel
     public:
         OBJModel(char *file_name);
 
+        void initialize(char *file_name);
+
         IndexedModel toIndexedModel();
+        void toIndexedModel(IndexedModel &result);
         void printALL();
 
         bool hasLoaded() { return has_loaded;}

@@ -1,7 +1,6 @@
 #include "indexedmodel.h"
 
-IndexedModel::IndexedModel()
-{
+IndexedModel::IndexedModel() {
 
 }
 

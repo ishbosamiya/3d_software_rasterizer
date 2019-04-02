@@ -1,16 +1,47 @@
 #include "bitmap.h"
 #include <stdlib.h>
+
 Bitmap::Bitmap() {
-    have_surface = false;
+}
+
+Bitmap::Bitmap(const Bitmap &obj) {
+    m_width = obj.m_width;
+    m_height = obj.m_height;
+    m_channels = obj.m_channels;
+    m_components = new char[m_width * m_height * m_channels];
+    for(int i = 0; i < m_width * m_height * m_channels; i++) {
+        m_components[i] = obj.m_components[i];
+    }
+    m_image_surface = obj.m_image_surface;
 }
 
 Bitmap::Bitmap(unsigned int width, unsigned int height, unsigned int channels) {
     //basic initialization of the values
-    m_width = width;
-    m_height = height;
-    m_channels = channels;
-    m_components = new char[width * height * channels];
-    have_surface = false;
+    initialize(width, height, channels);
+}
+
+Bitmap Bitmap::getResizedBitmap(int width, int height) {
+    Bitmap image(width, height, 3);
+    for(int x = 0; x < width; x++) {
+        for(int y = 0; y < height; y++) {
+            int source_x = x * getWidth() / width;
+            int source_y = y * getHeight() / height;
+            image.copyPixel(x, y, source_x, source_y, *this);
+        }
+    }
+    return image;
+}
+
+Bitmap Bitmap::getResizedBitmap(Bitmap &image) {
+    int width = image.getWidth();
+    int height = image.getHeight();
+    for(int x = 0; x < width; x++) {
+        for(int y = 0; y < height; y++) {
+            int source_x = x * getWidth() / width;
+            int source_y = y * getHeight() / height;
+            image.copyPixel(x, y, source_x, source_y, *this);
+        }
+    }
 }
 
 Uint32 Bitmap::getPixel32( SDL_Surface *surface, int x, int y ) {
@@ -54,17 +85,17 @@ Uint32 Bitmap::getPixel32( SDL_Surface *surface, int x, int y ) {
 //}
 
 void Bitmap::initialize(unsigned int width, unsigned int height, unsigned int channels) {
-    //copy of overloaded constructor Bitmap(unsigned int width, unsigned int height, unsigned int channels)
-
     //basic initialization of the values
     m_width = width;
     m_height = height;
     m_channels = channels;
     m_components = new char[width * height * channels];
+    m_image_surface = NULL;
 }
 
 SDL_Surface* Bitmap::getSurface() {
     //to get the sdl surface to the image
+    SDL_FreeSurface(m_image_surface);
     m_image_surface = SDL_CreateRGBSurfaceFrom((void *)m_components,
                                                     m_width,
                                                     m_height,
@@ -79,10 +110,8 @@ SDL_Surface* Bitmap::getSurface() {
 
 void Bitmap::clear(char shade) {
     //running through all the pixel's of the image to set it to one single shade
-    for(int i = 0; i < m_width * m_height * m_channels; i = i + m_channels) {
-        m_components[i + 0] = shade;
-        m_components[i + 1] = shade;
-        m_components[i + 2] = shade;
+    for(int i = 0; i < m_width * m_height * m_channels; i++) {
+        m_components[i] = shade;
     }
 }
 
@@ -94,7 +123,7 @@ void Bitmap::drawPixel(int x, int y, char r, char g, char b) {
     m_components[index + 2] = b;
 }
 
-void Bitmap::copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src) {
+void Bitmap::copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap &src) {
     int destIndex = (dest_X + dest_Y * m_width) * m_channels;
     int srcIndex = (src_X + src_Y * src.getWidth()) * m_channels;
     m_components[destIndex + 0] = src.getComponent(srcIndex + 0);
@@ -120,6 +149,7 @@ void Bitmap::generateNoise() {
 }
 
 Bitmap::~Bitmap() {
-    //delete m_components;
+    delete [] m_components;
+    SDL_FreeSurface(m_image_surface);
     //delete m_image_surface;
 }

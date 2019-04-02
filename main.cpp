@@ -1,6 +1,5 @@
 #include <iostream>
 #include "display.h"
-#include "stars3D.h"
 #include "bitmap.h"
 #include "renderContext.h"
 #include "vector4f.h"
@@ -22,14 +21,11 @@ int main(int argc, char *argv[]) {
     Display z_buffer_display("z Buffer", width/5, height/5, 0, 0);
     Display display("Software Rendering", width, height);
 
-    RenderContext z_buffer;
-
     Bitmap texture(32, 32, 3);
     texture.generateNoise();
 
     Mesh *mesh;
     Mesh mesh_data[7];
-    //mesh_data[0].initialize("icosphere.obj");
 
     mesh = &mesh_data[0];
     bool draw_triangle = true;
@@ -51,7 +47,6 @@ int main(int argc, char *argv[]) {
     Matrix4f translation;
     Matrix4f rotation;
     Matrix4f scale;
-    Matrix4f transform;
 
     //test code for rotation of triangle
     bool rotation_check = false;
@@ -81,57 +76,37 @@ int main(int argc, char *argv[]) {
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym) {
                         case SDLK_ESCAPE:
+                            SDL_Quit();
                             return 0;
                         case SDLK_r:
                             rotation_check = (!rotation_check);
                             break;
                         case SDLK_1:
-                            if(mesh_data[0].isInitialized() == false) {
-                                mesh_data[0].initialize("icosphere.obj");
-                            }
-                            mesh = &mesh_data[0];
+                            mesh = mesh_data[0].initialize("icosphere.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_2:
-                            if(mesh_data[1].isInitialized() == false) {
-                                mesh_data[1].initialize("sphere_high.obj");
-                            }
-                            mesh = &mesh_data[1];
+                            mesh = mesh_data[1].initialize("sphere_high.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_3:
-                            if(mesh_data[2].isInitialized() == false) {
-                                mesh_data[2].initialize("monkey0.obj");
-                            }
-                            mesh = &mesh_data[2];
+                            mesh = mesh_data[2].initialize("monkey0.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_4:
-                            if(mesh_data[3].isInitialized() == false) {
-                                mesh_data[3].initialize("cylinder.obj");
-                            }
-                            mesh = &mesh_data[3];
+                            mesh = mesh_data[3].initialize("cylinder.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_5:
-                            if(mesh_data[4].isInitialized() == false) {
-                                mesh_data[4].initialize("cylinder_hollow.obj");
-                            }
-                            mesh = &mesh_data[4];
+                            mesh = mesh_data[4].initialize("cylinder_hollow.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_6:
-                            if(mesh_data[5].isInitialized() == false) {
-                                mesh_data[5].initialize("man.obj");
-                            }
-                            mesh = &mesh_data[5];
+                            mesh = mesh_data[5].initialize("man.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_7:
-                            if(mesh_data[6].isInitialized() == false) {
-                                mesh_data[6].initialize("teapot.obj");
-                            }
-                            mesh = &mesh_data[6];
+                            mesh = mesh_data[6].initialize("teapot.obj");
                             draw_triangle = false;
                             break;
                         case SDLK_t:
@@ -196,7 +171,7 @@ int main(int argc, char *argv[]) {
         else {
             scale.initScale(1, 1, 1);
         }
-        transform = projection.mul(translation.mul(scale).mul(rotation));
+        Matrix4f transform = projection.mul(translation.mul(scale).mul(rotation));
 
         //basic display wiping
         display.render_context.clear(0);
@@ -204,26 +179,26 @@ int main(int argc, char *argv[]) {
 
         //mesh drawing
         if(draw_triangle == true) {
-          display.render_context.fillTriangle(minYVert.transform(transform), midYVert.transform(transform), maxYVert.transform(transform), texture, draw_wireframe, false);
+            display.render_context.fillTriangle(minYVert.transform(transform), midYVert.transform(transform), maxYVert.transform(transform), texture, draw_wireframe, false);
         }
         else {
             display.render_context.drawMesh(*mesh, transform, texture, draw_wireframe, false);
         }
 
         //depth map displaying
-        z_buffer = display.render_context.getNormalizedZBuffer();
+        Bitmap z_buffer = display.render_context.getNormalizedZBuffer();
         if(draw_z_buffer == true) {
             display.renderImage(z_buffer);
         }
         else {
             display.renderImage();
         }
-        z_buffer_display.renderImage(z_buffer.getResizedRenderContext(z_buffer_display.getWidth(), z_buffer_display.getHeight()));
+        Bitmap z_buffer_small = z_buffer.getResizedBitmap(z_buffer_display.getWidth(), z_buffer_display.getHeight());
+        z_buffer_display.renderImage(z_buffer_small);
 
         //updating the window
         SDL_UpdateWindowSurface(display.window);
         SDL_UpdateWindowSurface(z_buffer_display.window);
-        //SDL_Delay(10);
         step++;
     }
 }

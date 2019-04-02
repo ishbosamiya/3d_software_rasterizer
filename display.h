@@ -20,7 +20,8 @@ class Display
         void updateWindow();
         //to render the image in memory to the window
         void renderImage();
-        void renderImage(RenderContext image);
+        void renderImage(RenderContext &image);
+        void renderImage(Bitmap &image);
 
         RenderContext getRenderContext() { return render_context;}
         int getWidth() { return width;}

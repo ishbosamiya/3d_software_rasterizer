@@ -78,11 +78,16 @@ void Display::renderImage(){
     SDL_BlitSurface(render_context.getSurface(), NULL, screenSurface, NULL);
 }
 
-void Display::renderImage(RenderContext image){
+void Display::renderImage(RenderContext &image){
+    SDL_BlitSurface(image.getSurface(), NULL, screenSurface, NULL);
+}
+
+void Display::renderImage(Bitmap &image){
     SDL_BlitSurface(image.getSurface(), NULL, screenSurface, NULL);
 }
 
 Display::~Display() {
     //deleting the context of window
     SDL_DestroyWindow(window);
+    SDL_FreeSurface(screenSurface);
 }

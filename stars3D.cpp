@@ -63,5 +63,7 @@ void Stars3D::updateAndRender(Bitmap &target, float delta) {
 
 Stars3D::~Stars3D()
 {
-    //dtor
+    delete [] m_starX;
+    delete [] m_starY;
+    delete [] m_starZ;
 }

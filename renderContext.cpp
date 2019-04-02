@@ -3,11 +3,21 @@
 using namespace std;
 
 RenderContext::RenderContext() {
-    //ctor
+    //ctorz_buffer.getResizedBitmap(z_buffer_display.getWidth(), z_buffer_display.getHeight())
 }
 
-RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels): Bitmap(width, height, channels) {
-    m_z_buffer = new float[width*height];
+RenderContext::RenderContext(const RenderContext &obj) {
+//    int width, height;
+//    width = obj.m_width;
+//    height = obj.m_height;
+    m_z_buffer = new float[m_width * m_height];
+    for(int i = 0; i < m_width * m_height; i++) {
+        m_z_buffer[i] = obj.m_z_buffer[i];
+    }
+}
+
+RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels) {
+    initialize(width, height, channels);
 }
 
 void RenderContext::clearDepthBuffer() {
@@ -18,10 +28,11 @@ void RenderContext::clearDepthBuffer() {
 
 //same as the overloaded constructor
 void RenderContext::initialize(unsigned int width, unsigned int height, unsigned int channels) {
-    *this = RenderContext(width, height, channels);
+    Bitmap::initialize(width, height, channels);
+    m_z_buffer = new float[width*height];
 }
 
-void RenderContext::drawMesh(Mesh mesh, Matrix4f transform, Bitmap texture, bool wireframe, bool back_face_culling) {
+void RenderContext::drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
     for(int i = 0; i < mesh.getNumIndices(); i+=3) {
         fillTriangle(mesh.getVertex(mesh.getIndex(i)).transform(transform),
                      mesh.getVertex(mesh.getIndex(i + 1)).transform(transform),
@@ -31,7 +42,7 @@ void RenderContext::drawMesh(Mesh mesh, Matrix4f transform, Bitmap texture, bool
 }
 
 //while needing to render the triangles with wireframe around them
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe, bool back_face_culling) {
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool wireframe, bool back_face_culling) {
     if(wireframe == true) {
         fillWireframe(v1, v2, v3, 255, 170, 64, 1, back_face_culling);
     }
@@ -41,7 +52,7 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture
 }
 
 //creating a global triangle generation function that works with any ordering of the vertices
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool back_face_culling) {
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling) {
     //randomly assigning values to the min, mid and max vertices
     //will later be sorted for the correct order
     //adding the perspective transforms to the triangle vertices
@@ -88,7 +99,7 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture
     scanTriangle(minYVert, midYVert, maxYVert, handedness, texture);
 }
 
-void RenderContext::scanTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVert, bool handedness, Bitmap texture) {
+void RenderContext::scanTriangle(Vertex &minYVert, Vertex &midYVert, Vertex &maxYVert, bool handedness, Bitmap &texture) {
     Gradients gradients(minYVert, midYVert, maxYVert);
 
     Edge top_to_bottom(gradients, minYVert, maxYVert, 0);
@@ -100,7 +111,7 @@ void RenderContext::scanTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVe
 }
 
 //getting information for (horizontal) lines from edge to edge
-void RenderContext::scanEdges(Gradients gradients, Edge &a, Edge &b, bool handedness, Bitmap texture) {
+void RenderContext::scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture) {
     //making sure that the left and right edges are on their correct sides
     Edge left = a;
     Edge right = b;
@@ -136,7 +147,7 @@ void RenderContext::scanEdges(Gradients gradients, Edge &a, Edge &b, bool handed
     }
 }
 
-void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, int j, Bitmap texture) {
+void RenderContext::drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture) {
     //basic sweep render of all the pixels between the starting x coordinate and the ending x coordinate
     int x_min = ceil(left.getX());
     int x_max = ceil(right.getX());
@@ -218,7 +229,7 @@ void RenderContext::fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char 
     drawWire(middle_to_bottom, thickness, r, g, b);
 }
 
-void RenderContext::drawWire(Edge edge, int thickness, char r, char g, char b) {
+void RenderContext::drawWire(Edge &edge, int thickness, char r, char g, char b) {
     //prev_x as a buffer to be able to complete the line
     int y_start = edge.getYStart();
     int y_end = edge.getYEnd();
@@ -316,8 +327,40 @@ void RenderContext::drawZBuffer() {
     }
 }
 
-RenderContext RenderContext::getNormalizedZBuffer() {
-    RenderContext result(m_width, m_height, m_channels);
+Bitmap RenderContext::getNormalizedZBuffer() {
+    Bitmap result(m_width, m_height, m_channels);
+//    float min = std::numeric_limits<float>::max();
+//    float max = std::numeric_limits<float>::min();
+//    float temp_max = std::numeric_limits<float>::max();
+//    for(int i = 0; i < m_width*m_height; i++) {
+//        if(min > m_z_buffer[i]) {
+//            min = m_z_buffer[i];
+//        }
+//        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
+//            max = m_z_buffer[i];
+//        }
+//    }
+//    max += 0.001;
+//    //std::cout << "Min: " << min << std::endl;
+//    for(int i = 0; i < m_width; i++) {
+//        for(int j = 0; j < m_height; j++) {
+//            float value = m_z_buffer[i + j*m_width];
+//            float relative = 0;
+//            if(max != min && value != temp_max) {
+//                relative = (1.0 - ((value - min)/(max - min)));
+//            }
+//            if(value == temp_max) {
+//                relative = 0;
+//            }
+//            char colour = relative * 255;
+//            result.drawPixel(i, j, colour, colour, colour);
+//        }
+//    }
+    getNormalizedZBuffer(result);
+    return result;
+}
+
+void RenderContext::getNormalizedZBuffer(Bitmap &image) {
     float min = std::numeric_limits<float>::max();
     float max = std::numeric_limits<float>::min();
     float temp_max = std::numeric_limits<float>::max();
@@ -342,10 +385,9 @@ RenderContext RenderContext::getNormalizedZBuffer() {
                 relative = 0;
             }
             char colour = relative * 255;
-            result.drawPixel(i, j, colour, colour, colour);
+            image.drawPixel(i, j, colour, colour, colour);
         }
     }
-    return result;
 }
 
 RenderContext RenderContext::getResizedRenderContext(int width, int height) {
@@ -360,6 +402,18 @@ RenderContext RenderContext::getResizedRenderContext(int width, int height) {
     return image;
 }
 
+void RenderContext::getResizedRenderContext(RenderContext &image) {
+    int width = image.getWidth();
+    int height = image.getHeight();
+    for(int x = 0; x < width; x++) {
+        for(int y = 0; y < height; y++) {
+            int source_x = x * getWidth() / width;
+            int source_y = y * getHeight() / height;
+            image.copyPixel(x, y, source_x, source_y, *this);
+        }
+    }
+}
+
 RenderContext::~RenderContext() {
-    //delete m_z_buffer;
+    delete [] m_z_buffer;
 }

@@ -13,28 +13,31 @@
 
 class RenderContext: public Bitmap
 {
-    void scanTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVert, bool handedness, Bitmap texture);
-    void scanEdges(Gradients gradients, Edge &a, Edge &b, bool handedness, Bitmap texture);
-    void drawScanLine(Gradients gradients, Edge &left, Edge &right, int j, Bitmap texture);
-    void drawWire(Edge edge, int thickness, char r, char g, char b);
+    void scanTriangle(Vertex &minYVert, Vertex &midYVert, Vertex &maxYVert, bool handedness, Bitmap &texture);
+    void scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture);
+    void drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture);
+    void drawWire(Edge &edge, int thickness, char r, char g, char b);
 
     float *m_z_buffer;
 
     public:
         RenderContext();
+        RenderContext(const RenderContext &obj);
         RenderContext(unsigned int width, unsigned int height, unsigned int channels = 3);
         void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
 
-        void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool back_face_culling);
-        void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe, bool back_face_culling);
+        void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling);
+        void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool wireframe, bool back_face_culling);
         void fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling);
-        void drawMesh(Mesh mesh, Matrix4f transform, Bitmap texture, bool wireframe, bool back_face_culling);
+        void drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling);
 
         void clearDepthBuffer();
         void drawZBuffer();
-        RenderContext getNormalizedZBuffer();
+        Bitmap getNormalizedZBuffer();
+        void getNormalizedZBuffer(Bitmap &image);
 
         RenderContext getResizedRenderContext(int width, int height);
+        void getResizedRenderContext(RenderContext &image);
 
         ~RenderContext();
 

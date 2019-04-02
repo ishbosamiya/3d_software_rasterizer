@@ -36,7 +36,7 @@ class Mesh
         Mesh();
         Mesh(char *file_name);
 
-        void initialize(char *file_name);
+        Mesh* initialize(char *file_name);
 
         Vertex getVertex(int i) { return getElement(m_vertices, i);}
         int getIndex(int i) { return getElement(m_indices, i);}

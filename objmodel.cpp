@@ -2,6 +2,10 @@
 
 OBJModel::OBJModel(char *file_name)
 {
+    initialize(file_name);
+}
+
+void OBJModel::initialize(char *file_name) {
     m_has_normals = false;
     m_has_texCoords = false;
     no_of_triangles = 0;
@@ -268,6 +272,45 @@ IndexedModel OBJModel::toIndexedModel() {
 
     cout << "IndexedModel has been made" << endl;
     return result;
+}
+
+void OBJModel::toIndexedModel(IndexedModel &result) {
+    //cout << "No of Indices: " << m_indices.size() << endl;
+
+    int face_count = 0;
+    for(int i = 0; i < m_indices.size(); i++) {
+        int m_positions_index = getElement(m_indices, i).getPositionsIndex();
+        addElement(result.getPositions(), getElement(m_positions, m_positions_index));
+        if(m_has_texCoords == true) {
+            int m_texCoords_index = getElement(m_indices, i).getTexCoordsIndex();
+            addElement(result.getTexCoords(), getElement(m_texCoords, m_texCoords_index));
+        }
+        else {
+            addElement(result.getTexCoords(), Vector4f(0, 0, 0, 0));
+        }
+        if(m_has_normals == true) {
+            int m_normals_index = getElement(m_indices, i).getNormalsIndex();
+            addElement(result.getNormals(), getElement(m_normals, m_normals_index));
+        }
+        else {
+            addElement(result.getNormals(), Vector4f(0, 0, 0, 0));
+        }
+        addElement(result.getIndices(), i);
+
+//        cout << "Face " << face_count/3 + 1 << ": ";
+//        cout << "Vertex " << i%4 << ": ";
+//        cout << "Positions Index: " << m_positions_index << " TexCoords Index: " << m_texCoords_index << " Normals Index: " << m_normals_index << endl;
+//
+//        cout << "Face " << face_count/3 + 1 << ": ";
+//        cout << "Vertex " << i%4 << ": " << endl;
+//        cout << "Position: "; getElement(m_positions, m_positions_index).printALL();
+//        cout << "TexCoord: "; getElement(m_texCoords, m_texCoords_index).printALL();
+//        cout << "Normals: "; getElement(m_normals, m_normals_index).printALL();
+//        cout << endl;
+        face_count++;
+    }
+
+    cout << "IndexedModel has been made" << endl;
 }
 
 OBJModel::~OBJModel()

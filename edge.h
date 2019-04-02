@@ -24,6 +24,7 @@ class Edge
 
     public:
         Edge(Gradients gradients, Vertex minYVert, Vertex maxYVert, int minYVertIndex);
+        Edge(const Edge &obj);
         void step();
         float getX();
         int getXStart();

@@ -22,6 +22,7 @@ class Gradients
 
     public:
         Gradients(Vertex minYVert, Vertex midYVert, Vertex maxYVert);
+        Gradients(const Gradients &obj);
 
         float getTexCoordX(int loc) { return m_texCoordX[loc];}
         float getTexCoordY(int loc) { return m_texCoordY[loc];}

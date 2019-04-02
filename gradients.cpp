@@ -42,6 +42,28 @@ Gradients::Gradients(Vertex minYVert, Vertex midYVert, Vertex maxYVert)
 
 }
 
+Gradients::Gradients(const Gradients &obj) {
+    m_texCoordX = new float[3];
+    m_texCoordY = new float[3];
+    m_one_over_z = new float[3];
+    m_depth = new float[3];
+    for(int i = 0; i < 3; i++) {
+        m_texCoordX[i] = obj.m_texCoordX[i];
+        m_texCoordY[i] = obj.m_texCoordY[i];
+        m_one_over_z[i] = obj.m_one_over_z[i];
+        m_depth[i] = obj.m_depth[i];
+    }
+
+    m_texCoordX_XStep = obj.m_texCoordX_XStep;
+    m_texCoordX_YStep = obj.m_texCoordX_YStep;
+    m_texCoordY_XStep = obj.m_texCoordY_XStep;
+    m_texCoordY_YStep = obj.m_texCoordY_YStep;
+    m_one_over_z_XStep = obj.m_one_over_z_XStep;
+    m_one_over_z_YStep = obj.m_one_over_z_YStep;
+    m_depth_x_step = obj.m_depth_x_step;
+    m_depth_y_step = obj.m_depth_y_step;
+}
+
 float Gradients::calcXStep(float *values, Vertex minYVert, Vertex midYVert, Vertex maxYVert, float one_over_dx) {
     return (((values[1] - values[2]) *
              (minYVert.getY() - maxYVert.getY())) -
@@ -58,6 +80,8 @@ float Gradients::calcYStep(float *values, Vertex minYVert, Vertex midYVert, Vert
 
 Gradients::~Gradients()
 {
-    //delete m_texCoordX;
-    //delete m_texCoordY;
+    delete [] m_texCoordX;
+    delete [] m_texCoordY;
+    delete [] m_one_over_z;
+    delete [] m_depth;
 }

@@ -6,6 +6,14 @@ Mesh::Mesh() {
 
 Mesh::Mesh(char *file_name)
 {
+    initialize(file_name);
+}
+
+Mesh* Mesh::initialize(char *file_name) {
+    if(is_initialized) {
+        return this;
+    }
+//    *this = Mesh(file_name);
     m_file_name = file_name;
     char *temp = new char[500];
     strcpy(temp, file_name);
@@ -18,9 +26,10 @@ Mesh::Mesh(char *file_name)
         if(obj.hasLoaded() == false) {
             cout << "Failed to find obj of " << file_name << endl;
             is_initialized = false;
-            return;
+            return this;
         }
-        IndexedModel model = obj.toIndexedModel();
+        IndexedModel model;
+        obj.toIndexedModel(model);
 
         for(int i = 0; i < model.getPositions().size(); i++) {
             addElement(m_vertices, Vertex(getElement(model.getPositions(), i), getElement(model.getTexCoords(), i)));
@@ -31,14 +40,15 @@ Mesh::Mesh(char *file_name)
         is_initialized = true;
     }
     else {
-        if(readMeshFromFile() == false) {
+        if(!readMeshFromFile()) {
             OBJModel obj(file_name);
             if(obj.hasLoaded() == false) {
                 cout << "Failed to find obj of " << file_name << endl;
                 is_initialized = false;
-                return;
+                return this;
             }
-            IndexedModel model = obj.toIndexedModel();
+            IndexedModel model;
+            obj.toIndexedModel(model);
 
             for(int i = 0; i < model.getPositions().size(); i++) {
                 addElement(m_vertices, Vertex(getElement(model.getPositions(), i), getElement(model.getTexCoords(), i)));
@@ -52,10 +62,7 @@ Mesh::Mesh(char *file_name)
     cout << file_name << " has been loaded" << endl;
     fin.close();
     delete temp;
-}
-
-void Mesh::initialize(char *file_name) {
-    *this = Mesh(file_name);
+    return this;
 }
 
 bool Mesh::writeMeshToFile() {
@@ -108,6 +115,7 @@ bool Mesh::readMeshFromFile() {
         }
     }
     cout << m_file_name << " has been read from file" << endl;
+    is_initialized = true;
     fin.close();
     delete temp;
     return true;
@@ -169,5 +177,7 @@ void Mesh::equateListToVector(vector<int> &m_vector, list<int> &m_list) {
 
 Mesh::~Mesh()
 {
-    //dtor
+    m_vertices.clear();
+    m_indices.clear();
+    delete [] m_file_name;
 }

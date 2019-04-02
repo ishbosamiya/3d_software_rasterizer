@@ -10,41 +10,45 @@ Matrix4f::Matrix4f()
     }
 }
 
-Matrix4f::Matrix4f(float **m) {
-    this->m = m;
+Matrix4f::Matrix4f(const Matrix4f &obj) {
+//    std::swap(*m, *obj.m);
+//    std::swap(**m, **obj.m);
+    m = new float*[4];
+    for(int i = 0; i < 4; i++) {
+        m[i] = new float[4];
+    }
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            m[i][j] = obj.m[i][j];
+        }
+    }
 }
 
 //creating identity matrix
-Matrix4f Matrix4f::initIdentity() {
+void Matrix4f::initIdentity() {
     m[0][0] = 1;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = 0;
     m[1][0] = 0;	m[1][1] = 1;	m[1][2] = 0;	m[1][3] = 0;
     m[2][0] = 0;	m[2][1] = 0;	m[2][2] = 1;	m[2][3] = 0;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
 //performing a screen space transform
-Matrix4f Matrix4f::initScreenSpaceTransform(float half_width, float half_height) {
+void Matrix4f::initScreenSpaceTransform(float half_width, float half_height) {
     m[0][0] = half_width;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = half_width;
     m[1][0] = 0;	m[1][1] = -half_height;	m[1][2] = 0;	m[1][3] = half_height;
     m[2][0] = 0;	m[2][1] = 0;	m[2][2] = 1;	m[2][3] = 0;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
 //for moving the vertices by x, y and z coordinates
-Matrix4f Matrix4f::initTranslation(float x, float y, float z) {
+void Matrix4f::initTranslation(float x, float y, float z) {
     m[0][0] = 1;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = x;
     m[1][0] = 0;	m[1][1] = 1;	m[1][2] = 0;	m[1][3] = y;
     m[2][0] = 0;	m[2][1] = 0;	m[2][2] = 1;	m[2][3] = z;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
-Matrix4f Matrix4f::initRotation(float x, float y, float z, float angle) {
+void Matrix4f::initRotation(float x, float y, float z, float angle) {
     float sin_ = (float)sin(angle);
     float cos_ = (float)cos(angle);
 
@@ -52,11 +56,9 @@ Matrix4f Matrix4f::initRotation(float x, float y, float z, float angle) {
     m[1][0] = y*x*(1-cos_)+z*sin_;	m[1][1] = cos_+y*y*(1-cos_);	m[1][2] = y*z*(1-cos_)-x*sin_;	m[1][3] = 0;
     m[2][0] = z*x*(1-cos_)-y*sin_;	m[2][1] = z*y*(1-cos_)+x*sin_;	m[2][2] = cos_+z*z*(1-cos_);	m[2][3] = 0;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
-Matrix4f Matrix4f::initRotation(float x, float y, float z) {
+void Matrix4f::initRotation(float x, float y, float z) {
     Matrix4f rx;
     Matrix4f ry;
     Matrix4f rz;
@@ -76,21 +78,24 @@ Matrix4f Matrix4f::initRotation(float x, float y, float z) {
     ry.m[2][0] = (float)sin(y);     ry.m[2][1] = 0;					ry.m[2][2] = (float)cos(y);     ry.m[2][3] = 0;
     ry.m[3][0] = 0;					ry.m[3][1] = 0;					ry.m[3][2] = 0;					ry.m[3][3] = 1;
 
-    m = rz.mul(ry.mul(rx)).getM();
+    Matrix4f temp = rz.mul(ry.mul(rx));
 
-    return Matrix4f(m);
+    float **temp_matrix = temp.getM();
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            this->m[i][j] = temp_matrix[i][j];
+        }
+    }
 }
 
-Matrix4f Matrix4f::initScale(float x, float y, float z) {
+void Matrix4f::initScale(float x, float y, float z) {
     m[0][0] = x;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = 0;
     m[1][0] = 0;	m[1][1] = y;	m[1][2] = 0;	m[1][3] = 0;
     m[2][0] = 0;	m[2][1] = 0;	m[2][2] = z;	m[2][3] = 0;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
-Matrix4f Matrix4f::initPerspective(float fov, float aspect_ratio, float z_near, float z_far) {
+void Matrix4f::initPerspective(float fov, float aspect_ratio, float z_near, float z_far) {
     float tan_half_FOV = (float)tan(fov/2.0);
     float z_range = z_near - z_far;
 
@@ -98,11 +103,9 @@ Matrix4f Matrix4f::initPerspective(float fov, float aspect_ratio, float z_near, 
     m[1][0] = 0;	m[1][1] = 1.0/tan_half_FOV;	m[1][2] = 0;	m[1][3] = 0;
     m[2][0] = 0;	m[2][1] = 0;	m[2][2] = (-z_near - z_far)/z_range;	m[2][3] = 2 * z_far * z_near / z_range;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 1;	m[3][3] = 0;
-
-    return Matrix4f(m);
 }
 
-Matrix4f Matrix4f::initOrthographic(float left, float right, float bottom, float top, float near, float far) {
+void Matrix4f::initOrthographic(float left, float right, float bottom, float top, float near, float far) {
     float width = right - left;
     float height = top - bottom;
     float depth = far - near;
@@ -111,8 +114,6 @@ Matrix4f Matrix4f::initOrthographic(float left, float right, float bottom, float
     m[1][0] = 0;	m[1][1] = 2.0/height;	m[1][2] = 0;	m[1][3] = -(top + bottom)/height;
     m[2][0] = 0;	m[2][1] = 0;	m[2][2] = -2.0/depth;	m[2][3] = -(far + near)/depth;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
 Matrix4f Matrix4f::initRotation(Vector4f forward, Vector4f up) {
@@ -133,8 +134,6 @@ Matrix4f Matrix4f::initRotation(Vector4f forward, Vector4f up, Vector4f right) {
     m[1][0] = u.getX();	m[1][1] = u.getY();	m[1][2] = u.getZ();	m[1][3] = 0;
     m[2][0] = f.getX();	m[2][1] = f.getY();	m[2][2] = f.getZ();	m[2][3] = 0;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
-
-    return Matrix4f(m);
 }
 
 Vector4f Matrix4f::transform(Vector4f r) {
@@ -172,5 +171,8 @@ void Matrix4f::set(int x, int y, float value) {
 
 Matrix4f::~Matrix4f()
 {
-    //dtor
+    for(int i = 0; i < 4; i++) {
+        delete [] m[i];
+    }
+    delete [] m;
 }

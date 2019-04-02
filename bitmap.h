@@ -12,6 +12,7 @@ class Bitmap
 {
     public:
         Bitmap();
+        Bitmap(const Bitmap &obj);
         //Bitmap(char *file_name);
         Bitmap(unsigned int width, unsigned int height, unsigned int channels = 3);
         virtual void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
@@ -24,11 +25,14 @@ class Bitmap
         //to generate a noisy image
         void generateNoise();
         //for drawing pixel from a defined texture map
-        void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src);
+        void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap &src);
 
         void getPixel(int x, int y, char &r, char &g, char &b);
 
         char getComponent(int index) { return m_components[index];}
+
+        Bitmap getResizedBitmap(int width, int height);
+        Bitmap getResizedBitmap(Bitmap &image);
 
         Uint32 getPixel32( SDL_Surface *surface, int x, int y );
 
@@ -46,7 +50,6 @@ class Bitmap
         unsigned int m_channels;
         char *m_components;
         SDL_Surface *m_image_surface;
-        bool have_surface;
 };
 
 #endif // BITMAP_H
