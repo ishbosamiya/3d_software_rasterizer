@@ -19,6 +19,8 @@ class Edge
     float m_texCoordYStep;
     float m_one_over_z;
     float m_one_over_z_step;
+    float m_depth;
+    float m_depth_step;
 
     public:
         Edge(Gradients gradients, Vertex minYVert, Vertex maxYVert, int minYVertIndex);
@@ -31,6 +33,7 @@ class Edge
         float getTexCoordX();
         float getTexCoordY();
         float getOneOverZ();
+        float getDepth() { return m_depth;}
         ~Edge();
 
     protected:

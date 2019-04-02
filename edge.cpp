@@ -32,6 +32,10 @@ Edge::Edge(Gradients gradients, Vertex minYVert, Vertex maxYVert, int minYVertIn
                 gradients.getOneOverZ_YStep() * y_pre_step;
     m_one_over_z_step = gradients.getOneOverZ_YStep() + gradients.getOneOverZ_XStep() * m_x_step;
 
+    m_depth = gradients.getDepth(minYVertIndex) +
+            gradients.getDepthXStep() * x_pre_step +
+            gradients.getDepthYStep() * y_pre_step;
+    m_depth_step = gradients.getDepthYStep() + gradients.getDepthXStep() * m_x_step;
 }
 
 void Edge::step() {
@@ -39,6 +43,7 @@ void Edge::step() {
     m_texCoordX += m_texCoordXStep;
     m_texCoordY += m_texCoordYStep;
     m_one_over_z += m_one_over_z_step;
+    m_depth += m_depth_step;
 }
 
 float Edge::getX() {

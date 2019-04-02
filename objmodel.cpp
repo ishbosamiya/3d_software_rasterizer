@@ -1,229 +1,183 @@
 #include "objmodel.h"
 
-OBJModel::OBJModel(string file_name)
+OBJModel::OBJModel(char *file_name)
 {
-    m_has_texCoords = false;
     m_has_normals = false;
-
-    ifstream meshReader;
-    meshReader.open(file_name);
-    if(!meshReader) {
-        cerr << "File Could Not Be Opened" << endl;
+    m_has_texCoords = false;
+    no_of_triangles = 0;
+    cout << file_name << " getting created" << endl;
+    ifstream fin;
+    fin.open(file_name);
+    if(!fin) {
+        cout << "OBJ file did not open!!!" << endl;
         return;
     }
-    string line;
-    int no_of_tokens = 0;
-    while(!meshReader.eof()) {
-        meshReader >> line;
-        no_of_tokens++;
-    }
-    meshReader.close();
-    meshReader.open(file_name);
-    string *tokens = new string[no_of_tokens];
-    int temp = 0;
-    while(!meshReader.eof()) {
-        meshReader >> tokens[temp];
-        temp++;
-    }
-    for(int i = 0; i < no_of_tokens; i++) {
-        if(tokens[0].compare("v") == 0) {
-            stringstream no_s_1(tokens[1]);
-            float no_1;
-            no_s_1 >> no_1;
-            stringstream no_s_2(tokens[2]);
-            float no_2;
-            no_s_2 >> no_2;
-            stringstream no_s_3(tokens[3]);
-            float no_3;
-            no_s_3 >> no_3;
-            addElement(m_positions, Vector4f(no_1, no_2, no_3, 1));
+
+    char type[3];
+    while(!fin.eof()) {
+        fin >> type;
+        //cout << type << endl;
+        if(type[0] == 'v' && type[1] == '\0') {
+            //cout << "v seen" << endl;
+            float position1;
+            float position2;
+            float position3;
+            fin >> position1 >> position2 >> position3;
+            //cout << position1 << position2 << position3 << endl;
+            addElement(m_positions, Vector4f(position1, position2, position3, 1));
         }
-        else if(tokens[0].compare("vt") == 0) {
-            stringstream no_s_1(tokens[1]);
-            float no_1;
-            no_s_1 >> no_1;
-            stringstream no_s_2(tokens[2]);
-            float no_2;
-            no_s_2 >> no_2;
-            addElement(m_texCoords, Vector4f(no_1, 1.0- no_2, 0, 0));
+        else if(type[0] == 'v' && type[1] == 't') {
+            //cout << "vt seen" << endl;
+            float position1;
+            float position2;
+            fin >> position1 >> position2;
+            addElement(m_texCoords, Vector4f(position1, 1.0 - position2, 0, 0));
+            m_has_texCoords = true;
         }
-        else if(tokens[0].compare("vn") == 0) {
-            stringstream no_s_1(tokens[1]);
-            float no_1;
-            no_s_1 >> no_1;
-            stringstream no_s_2(tokens[2]);
-            float no_2;
-            no_s_2 >> no_2;
-            stringstream no_s_3(tokens[3]);
-            float no_3;
-            no_s_3 >> no_3;
-            addElement(m_normals, Vector4f(no_1, no_2, no_3, 1));
+        else if(type[0] == 'v' && type[1] == 'n') {
+            //cout << "vn seen" << endl;
+            float position1;
+            float position2;
+            float position3;
+            fin >> position1 >> position2 >> position3;
+            addElement(m_normals, Vector4f(position1, position2, position3, 1));
+            m_has_normals = true;
         }
-        else if(tokens[0].compare("f") == 0) {
-            for(int i = 0; i < no_of_tokens - 3; i++) {
-                addElement(m_indices, parseOBJIndex(tokens[1]));
-                addElement(m_indices, parseOBJIndex(tokens[2 + i]));
-                addElement(m_indices, parseOBJIndex(tokens[3 + i]));
+        else if(type[0] == 'f' && type[1] == '\0') {
+            //cout << "f seen" << endl;
+            int no_components = 1;
+            if(m_has_normals == true) {
+                no_components++;
             }
+            if(m_has_texCoords == true) {
+                no_components++;
+            }
+
+            //to get face
+            int no_of_vertices = 0;
+            int start = fin.tellg();
+            if(start == -1) {
+                break;
+            }
+            {
+                char temp[500];
+                fin.get(temp, 500);
+                if(temp[0] == '\0') {
+                    break;
+                }
+                for(int i = 0; temp[i]!='\0'; i++) {
+                    if(temp[i] == ' ') {
+                        no_of_vertices++;
+                    }
+                }
+                fin.seekg(start);
+            }
+            OBJIndex index[no_of_vertices];
+
+            for(int i = 0; i < no_of_vertices; i++) {
+                char info[100];
+                fin >> info;
+                char **result = getSplit(info, '/');
+                addIndices(index[i], result);
+                delete result;
+                if(no_of_vertices > 3) {
+                    addElement(m_indices, index[0]);
+                    addElement(m_indices, index[i - 1]);
+                }
+                addElement(m_indices, index[i]);
+            }
+            no_of_triangles += no_of_vertices - 2;
+//            OBJIndex index[3];
+//            char info[50];
+//            fin >> info;
+//            char **result = getSplit(info, '/');
+//            addIndices(index[0], result);
+//            fin >> info;
+//            result = getSplit(info, '/');
+//            addIndices(index[1], result);
+//            fin >> info;
+//            result = getSplit(info, '/');
+//            addIndices(index[2], result);
+//            //storing the indices in contiguous manner
+//            addElement(m_indices, index[0]);
+//            addElement(m_indices, index[1]);
+//            addElement(m_indices, index[2]);
+//            //cout << endl;
+//            delete result;
+        }
+        else {
+            char temp[100];
+            fin.get(temp, 100);
+            //cout << temp << endl;
         }
     }
-    meshReader.close();
+//    m_indices.pop_back();
+//    m_indices.pop_back();
+//    m_indices.pop_back();
+    cout << "objmodel created with " << no_of_triangles << " triangles" << endl;
 }
+
+void OBJModel::addIndices(OBJIndex &index, char **result) {
+    for(int i = 0; i < 3; i++) {
+        int temp = 0;
+        for(int j = 0; result[i][j] != '\0'; j++) {
+            temp *= 10;
+            temp += (int)result[i][j] - (int)'0';
+        }
+        //cout << "temp: " << temp << endl;
+        if(i == 0) {
+            index.setPositionsIndex(temp - 1);
+        }
+        else if(i == 1) {
+            index.setTexCoordsIndex(temp - 1);
+        }
+        else if(i == 2) {
+            index.setNormalsIndex(temp - 1);
+        }
+    }
+}
+
+char** OBJModel::getSplit(char *data, char delimiter) {
+    int no_of_sub_strings = 1;
+    int max_sub_string = 0;
+    int curr_length = 0;
+    for(int i = 0; data[i] != '\0'; i++) {
+        if(data[i] == delimiter) {
+            no_of_sub_strings++;
+            if(max_sub_string < curr_length) {
+                max_sub_string = curr_length;
+            }
+            curr_length = 0;
+        }
+        else {
+            curr_length++;
+        }
+    }
+    char **result = new char*[no_of_sub_strings];
+    for(int i = 0; i < no_of_sub_strings; i++) {
+        result[i] = new char[max_sub_string];
+    }
+    int line_no = 0;
+    int repeater = 0;
+    for(int i = 0; data[i] != '\0'; i++) {
+        if(data[i] == delimiter || data[i] == '\0') {
+            result[line_no][repeater] = '\0';
+            line_no++;
+            repeater = 0;
+        }
+        else {
+            result[line_no][repeater] = data[i];
+            repeater++;
+        }
+    }
+    return result;
+}
+
 
 void OBJModel::addElement(list<Vector4f> &m_list, Vector4f data) {
     list<Vector4f>::iterator it;
     it = m_list.end();
     m_list.insert(it, data);
-}
-
-void OBJModel::addElement(list<OBJIndex> &m_list, OBJIndex data) {
-    list<OBJIndex>::iterator it;
-    it = m_list.end();
-    m_list.insert(it, data);
-}
-
-void OBJModel::addElement(list<int> &m_list, int data) {
-    list<int>::iterator it;
-    it = m_list.end();
-    m_list.insert(it, data);
-}
-
-OBJModel::OBJIndex OBJModel::parseOBJIndex(string token) {
-    //spitting the string into substrings with '/' as delimiter
-    int no_of_substrings = 1;
-    for(int i = 0; i <= token.length(); i++) {
-        if(token[i]=='/') {
-            no_of_substrings++;
-        }
-    }
-    string *values = new string[no_of_substrings];
-    int j = 0;
-    int index = 0;
-    for(int i = 0; i < token.length()+1; i++) {
-        if(token[i] == '/') {
-            index = 0;
-            j++;
-        }
-        else {
-            values[j][index] = token[i];
-        }
-    }
-
-    OBJIndex result;
-    //for converting the string to integer
-    stringstream no_s_0(values[0]);
-    int no_0;
-    no_s_0 >> no_0;
-    result.setVertexIndex(no_0 - 1);
-
-    if(no_of_substrings > 1) {
-        if(values[1].compare("") != 0) {
-            m_has_texCoords = true;
-            stringstream no_s_1(values[1]);
-            int no_1;
-            no_s_1 >> no_1;
-            result.setTexCoordIndex(no_1 - 1);
-        }
-        if(no_of_substrings > 2) {
-            m_has_normals = true;
-            stringstream no_s_2(values[2]);
-            int no_2;
-            no_s_2 >> no_2;
-            result.setNormalIndex(no_2 - 1);
-        }
-    }
-    return result;
-}
-
-string* OBJModel::removeEmptyStrings(string* data) {
-    list<string> result;
-    //can be going wrong here because of the size of data part
-    for(int i = 0; i < sizeof(data)/sizeof(data[0]); i++) {
-        if(data[i].compare("") != 0) {
-            list<string>::iterator it;
-            it = result.end();
-            result.insert(it, data[i]);
-        }
-    }
-    string *res = new string[result.size()];
-    for(int i = 0; i < result.size(); i++) {
-        list<string>::iterator it;
-        advance(it, i);
-        res[i] = *it;
-    }
-    return res;
-}
-
-IndexedModel OBJModel::toIndexedModel() {
-    IndexedModel result;
-    IndexedModel normal_model;
-    map<OBJIndex, int> result_index_map;
-    map<int, int> normal_index_map;
-    map<int, int> index_map;
-
-    for(int i = 0; i < m_indices.size(); i++) {
-        OBJIndex current_index = getElement(m_indices, i);
-
-        Vector4f current_position = getElement(m_positions, current_index.getVertexIndex());
-        Vector4f current_texCoord;
-        Vector4f current_normal;
-
-        if(m_has_texCoords) {
-            current_texCoord = getElement(m_texCoords, current_index.getTexCoordIndex());
-        }
-        else {
-            current_texCoord = Vector4f(0, 0, 0, 0);
-        }
-
-        if(m_has_normals) {
-            current_normal = getElement(m_normals, current_index.getNormalIndex());
-        }
-        else {
-            current_normal = Vector4f(0, 0, 0, 0);
-        }
-
-        int model_vertex_index = result_index_map.find(current_index)->second;
-
-        if(model_vertex_index == NULL) {
-            model_vertex_index = result.getPositions().size();
-            result_index_map.insert(make_pair(current_index, model_vertex_index));
-
-            addElement(result.getPositions(), current_position);
-            addElement(result.getTexCoords(), current_texCoord);
-            if(m_has_normals) {
-                addElement(result.getNormals(), current_normal);
-            }
-        }
-
-        int normal_model_index = normal_index_map.find(current_index.getVertexIndex())->first;
-
-        if(normal_model_index == NULL) {
-            normal_model_index = normal_model.getPositions().size();
-            normal_index_map.insert(make_pair(current_index.getVertexIndex(), normal_model_index));
-
-            addElement(normal_model.getPositions(), current_position);
-            addElement(normal_model.getTexCoords(), current_texCoord);
-            addElement(normal_model.getNormals(), current_normal);
-            addElement(normal_model.getTangents(), Vector4f(0, 0, 0, 0));
-        }
-
-        addElement(result.getIndices(), model_vertex_index);
-        addElement(normal_model.getIndices(), normal_model_index);
-        index_map.insert(make_pair(model_vertex_index, normal_model_index));
-    }
-
-    if(!m_has_normals) {
-        normal_model.calcNormals();
-        for(int i = 0; i < result.getPositions().size(); i++) {
-            addElement(result.getNormals(), getElement(normal_model.getNormals(), index_map.find(i)->first));
-        }
-    }
-
-    normal_model.calcTangents();
-    for(int i = 0; i < result.getPositions().size(); i++) {
-        addElement(result.getTangents(), getElement(normal_model.getTangents(), index_map.find(i)->first));
-    }
-    return result;
 }
 
 Vector4f OBJModel::getElement(list<Vector4f> &m_list, int index) {
@@ -233,11 +187,10 @@ Vector4f OBJModel::getElement(list<Vector4f> &m_list, int index) {
     return *it;
 }
 
-OBJModel::OBJIndex OBJModel::getElement(list<OBJIndex> &m_list, int index) {
-    list<OBJIndex>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    return *it;
+void OBJModel::addElement(list<int> &m_list, int data) {
+    list<int>::iterator it;
+    it = m_list.end();
+    m_list.insert(it, data);
 }
 
 int OBJModel::getElement(list<int> &m_list, int index) {
@@ -247,28 +200,92 @@ int OBJModel::getElement(list<int> &m_list, int index) {
     return *it;
 }
 
-void OBJModel::setElement(list<Vector4f> &m_list, int index, Vector4f data) {
-    list<Vector4f>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    *it = data;
+void OBJModel::addElement(list<OBJIndex> &m_list, OBJIndex data) {
+    list<OBJIndex>::iterator it;
+    it = m_list.end();
+    m_list.insert(it, data);
 }
 
-void OBJModel::setElement(list<int> &m_list, int index, int data) {
-    list<int>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    *it = data;
-}
-
-void OBJModel::setElement(list<OBJIndex> &m_list, int index, OBJIndex data) {
+OBJModel::OBJIndex OBJModel::getElement(list<OBJIndex> &m_list, int index) {
     list<OBJIndex>::iterator it;
     it = m_list.begin();
     advance(it, index);
-    *it = data;
+    return *it;
+}
+
+void OBJModel::deleteElement(list<OBJIndex> &m_list, int index) {
+    list<OBJIndex>::iterator it;
+    it = m_list.begin();
+    advance(it, index);
+    m_list.erase(it);
+}
+
+void OBJModel::deleteElement(list<OBJIndex> &m_list) {
+    list<OBJIndex>::iterator it;
+    it = m_list.end();
+    m_list.erase(it);
+}
+
+void OBJModel::printALL() {
+    for(int i = 0; i < m_positions.size(); i++) {
+        cout << "Position: ";
+        getElement(m_positions, i).printALL();
+    }
+    for(int i = 0; i < m_texCoords.size(); i++) {
+        cout << "texCoords: ";
+        getElement(m_texCoords, i).printALL();
+    }
+    for(int i = 0; i < m_normals.size(); i++) {
+        cout << "Normals: ";
+        getElement(m_normals, i).printALL();
+    }
+    for(int i = 0; i < m_indices.size(); i+=3) {
+        cout << "Vertex 1: "; getElement(m_indices, i + 0).printALL();
+        cout << "Vertex 2: "; getElement(m_indices, i + 1).printALL();
+        cout << "Vertex 3: "; getElement(m_indices, i + 2).printALL();
+        cout << endl;
+    }
+}
+
+IndexedModel OBJModel::toIndexedModel() {
+    IndexedModel result;
+
+    //cout << "No of Indices: " << m_indices.size() << endl;
+
+    int face_count = 0;
+    for(int i = 0; i < m_indices.size(); i++) {
+        int m_positions_index = getElement(m_indices, i).getPositionsIndex();
+        addElement(result.getPositions(), getElement(m_positions, m_positions_index));
+        if(m_has_texCoords == true) {
+            int m_texCoords_index = getElement(m_indices, i).getTexCoordsIndex();
+            addElement(result.getTexCoords(), getElement(m_texCoords, m_texCoords_index));
+        }
+        if(m_has_normals == true) {
+            int m_normals_index = getElement(m_indices, i).getNormalsIndex();
+            addElement(result.getNormals(), getElement(m_normals, m_normals_index));
+        }
+        addElement(result.getIndices(), i);
+
+//        cout << "Face " << face_count/3 + 1 << ": ";
+//        cout << "Vertex " << i%4 << ": ";
+//        cout << "Positions Index: " << m_positions_index << " TexCoords Index: " << m_texCoords_index << " Normals Index: " << m_normals_index << endl;
+//
+//        cout << "Face " << face_count/3 + 1 << ": ";
+//        cout << "Vertex " << i%4 << ": " << endl;
+//        cout << "Position: "; getElement(m_positions, m_positions_index).printALL();
+//        cout << "TexCoord: "; getElement(m_texCoords, m_texCoords_index).printALL();
+//        cout << "Normals: "; getElement(m_normals, m_normals_index).printALL();
+//        cout << endl;
+        face_count++;
+    }
+
+    return result;
 }
 
 OBJModel::~OBJModel()
 {
-    //dtor
+    m_positions.clear();
+    m_texCoords.clear();
+    m_normals.clear();
+    m_indices.clear();
 }

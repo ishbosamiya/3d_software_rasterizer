@@ -1,6 +1,8 @@
 #ifndef VECTOR4F_H
 #define VECTOR4F_H
 
+#include <iostream>
+using namespace std;
 
 class Vector4f
 {
@@ -36,6 +38,8 @@ class Vector4f
         Vector4f returnThis();
         bool operator == (Vector4f r);
         ~Vector4f();
+
+        void printALL();
 
     protected:
 };

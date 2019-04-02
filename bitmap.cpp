@@ -1,7 +1,7 @@
 #include "bitmap.h"
 #include <stdlib.h>
 Bitmap::Bitmap() {
-    //ctor
+    have_surface = false;
 }
 
 Bitmap::Bitmap(unsigned int width, unsigned int height, unsigned int channels) {
@@ -10,7 +10,18 @@ Bitmap::Bitmap(unsigned int width, unsigned int height, unsigned int channels) {
     m_height = height;
     m_channels = channels;
     m_components = new char[width * height * channels];
+    have_surface = false;
 }
+
+//Bitmap::Bitmap(char *file_name) {
+//    have_surface = true;
+//    SDL_Surface *image = IMG_Load(file_name);
+//    if(image == NULL) {
+//        cout << "Could Not Load Image!!!" << endl;
+//        return;
+//    }
+//    m_image_surface = image; //SDL_ConvertSurface(image, gSceenSurface->format, NULL);
+//}
 
 void Bitmap::initialize(unsigned int width, unsigned int height, unsigned int channels) {
     //copy of overloaded constructor Bitmap(unsigned int width, unsigned int height, unsigned int channels)
@@ -23,17 +34,19 @@ void Bitmap::initialize(unsigned int width, unsigned int height, unsigned int ch
 }
 
 SDL_Surface* Bitmap::getSurface() {
-    //to get the sdl surface to the image
-    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void *)m_components,
-                                                    m_width,
-                                                    m_height,
-                                                    m_channels * 8,
-                                                    m_width * m_channels,
-                                                    0x0000FF,
-                                                    0x00FF00,
-                                                    0xFF0000,
-                                                    0);
-    return surface;
+    if(have_surface == false) {
+        //to get the sdl surface to the image
+        m_image_surface = SDL_CreateRGBSurfaceFrom((void *)m_components,
+                                                        m_width,
+                                                        m_height,
+                                                        m_channels * 8,
+                                                        m_width * m_channels,
+                                                        0x0000FF,
+                                                        0x00FF00,
+                                                        0xFF0000,
+                                                        0);
+    }
+    return m_image_surface;
 }
 
 void Bitmap::clear(char shade) {

@@ -146,6 +146,10 @@ Vector4f Vector4f::returnThis() {
     return Vector4f(x, y, z, w);
 }
 
+void Vector4f::printALL() {
+    cout << "x: " << x << " y: " << y << " z: " << z << " w: " << w << endl;
+}
+
 Vector4f::~Vector4f()
 {
     //dtor

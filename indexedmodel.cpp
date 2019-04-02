@@ -93,5 +93,9 @@ void IndexedModel::calcTangents() {
 
 IndexedModel::~IndexedModel()
 {
-    //dtor
+    m_positions.clear();
+    m_texCoords.clear();
+    m_normals.clear();
+    m_tangents.clear();
+    m_indices.clear();
 }

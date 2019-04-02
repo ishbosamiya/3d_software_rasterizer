@@ -1,7 +1,5 @@
 #include "renderContext.h"
 
-#include <iostream>
-#include <math.h>
 using namespace std;
 
 RenderContext::RenderContext() {
@@ -10,15 +8,66 @@ RenderContext::RenderContext() {
 
 RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels): Bitmap(width, height, channels)
 {
+    m_z_buffer = new float[width*height];
+}
+
+void RenderContext::clearDepthBuffer() {
+    for(int i = 0; i < m_width*m_height; i++) {
+        m_z_buffer[i] = std::numeric_limits<float>::max();
+    }
 }
 
 //same as the overloaded constructor
 void RenderContext::initialize(unsigned int width, unsigned int height, unsigned int channels) {
     Bitmap::initialize(width, height, channels);
+    m_z_buffer = new float[width*height];
+}
+
+void RenderContext::drawMesh(Mesh mesh, Matrix4f transform, Bitmap texture, bool wireframe, bool back_face_culling) {
+    for(int i = 0; i < mesh.getNumIndices(); i+=3) {
+        fillTriangle(mesh.getVertex(mesh.getIndex(i)).transform(transform),
+                     mesh.getVertex(mesh.getIndex(i + 1)).transform(transform),
+                     mesh.getVertex(mesh.getIndex(i + 2)).transform(transform),
+                     texture, wireframe, back_face_culling);
+    }
+}
+
+void RenderContext::drawZBuffer() {
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::min();
+    float temp_max = std::numeric_limits<float>::max();
+    for(int i = 0; i < m_width*m_height; i++) {
+        if(min > m_z_buffer[i]) {
+            min = m_z_buffer[i];
+        }
+        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
+            max = m_z_buffer[i];
+        }
+    }
+    max += 0.001;
+    //std::cout << "Min: " << min << std::endl;
+    for(int i = 0; i < m_width; i++) {
+        for(int j = 0; j < m_height; j++) {
+            float value = m_z_buffer[i + j*m_width];
+            float relative = 0;
+            if(max != min && value != temp_max) {
+                relative = (1.0 - ((value - min)/(max - min)));
+            }
+            if(value == temp_max) {
+                relative = 0;
+            }
+//            if(value <= max) {
+//                //std::cout << "m_z_buffer: " << " x: " << i << " y: " << j << " value: " << value << std::endl;
+//                //std::cout << "m_z_buffer: " << " x: " << i << " y: " << j << " relative: " << relative << std::endl;
+//            }
+            char colour = relative * 255;
+            drawPixel(i, j, colour, colour, colour);
+        }
+    }
 }
 
 //creating a global triangle generation function that works with any ordering of the vertices
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture) {
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool back_face_culling) {
     //randomly assigning values to the min, mid and max vertices
     //will later be sorted for the correct order
     //adding the perspective transforms to the triangle vertices
@@ -27,6 +76,12 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture
     Vertex minYVert = v1.transform(screen_space_transform).perspectiveDivide();
     Vertex midYVert = v2.transform(screen_space_transform).perspectiveDivide();
     Vertex maxYVert = v3.transform(screen_space_transform).perspectiveDivide();
+
+    if(back_face_culling == true) {
+        if(minYVert.triangleArea(maxYVert, midYVert) >= 0) {
+            return;
+        }
+    }
 
     //Sorting the vertices
     if(maxYVert.getY() < midYVert.getY()) {
@@ -119,11 +174,13 @@ void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, i
     float texCoordX_XStep = (right.getTexCoordX() - left.getTexCoordX())/x_dist;
     float texCoordY_XStep = (right.getTexCoordY() - left.getTexCoordY())/x_dist;
     float one_over_z_XStep = (right.getOneOverZ() - left.getOneOverZ())/x_dist;
+    float depth_x_step = (right.getDepth() - left.getDepth())/x_dist;
 
     //
     float texCoordX = left.getTexCoordX() + texCoordX_XStep * x_pre_step;
     float texCoordY = left.getTexCoordY() + texCoordY_XStep * x_pre_step;
     float one_over_z = left.getOneOverZ() + one_over_z_XStep * x_pre_step;
+    float depth = left.getDepth() + depth_x_step * x_pre_step;
 
     for(int i = x_min; i < x_max; i++) {
 //        char r = (char)(color.getX() * 255.0 + 0.5);
@@ -132,25 +189,36 @@ void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, i
 //
 //        drawPixel(i, j, r, g, b);
 
-        float z = 1.0/one_over_z;
-        int src_X = (int)((texCoordX * z) * (texture.getWidth() - 1) + 0.5f);
-        int src_Y = (int)((texCoordY * z) * (texture.getHeight() - 1) + 0.5f);
+        int index = i + j * getWidth();
+        if(depth < m_z_buffer[index]) {
+            m_z_buffer[index] = depth;
+            float z = 1.0/one_over_z;
+            int src_X = (int)((texCoordX * z) * (texture.getWidth() - 1) + 0.5f);
+            int src_Y = (int)((texCoordY * z) * (texture.getHeight() - 1) + 0.5f);
 
-        copyPixel(i, j, src_X, src_Y, texture);
+            copyPixel(i, j, src_X, src_Y, texture);
+        }
 
         one_over_z += one_over_z_XStep;
         texCoordX += texCoordX_XStep;
         texCoordY += texCoordY_XStep;
+        depth += depth_x_step;
     }
 }
 
-void RenderContext::fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness) {
+void RenderContext::fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling) {
     //performing the necessary transformations on the vertices to convert them from ratio space to the screen space
     Matrix4f screen_space_transform;
     screen_space_transform.initScreenSpaceTransform(getWidth()/2.0, getHeight()/2.0);
     Vertex minYVert = v1.transform(screen_space_transform).perspectiveDivide();
     Vertex midYVert = v2.transform(screen_space_transform).perspectiveDivide();
     Vertex maxYVert = v3.transform(screen_space_transform).perspectiveDivide();
+
+    if(back_face_culling == true) {
+        if(minYVert.triangleArea(maxYVert, midYVert) >= 0) {
+            return;
+        }
+    }
 
     //Sorting the vertices
     if(maxYVert.getY() < midYVert.getY()) {
@@ -257,9 +325,13 @@ void RenderContext::drawWire(Edge edge, int thickness, char r, char g, char b) {
 }
 
 //while needing to render the triangles with wireframe around them
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe) {
-    fillTriangle(v1, v2, v3, texture);
-    fillWireframe(v1, v2, v3, 100, 100, 100, 2);
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe, bool back_face_culling) {
+    if(wireframe == true) {
+        fillWireframe(v1, v2, v3, 100, 100, 100, 2, back_face_culling);
+    }
+    else {
+        fillTriangle(v1, v2, v3, texture, back_face_culling);
+    }
 }
 
 RenderContext::~RenderContext()

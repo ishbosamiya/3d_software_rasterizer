@@ -4,6 +4,8 @@
 #include "bitmap.h"
 #include "renderContext.h"
 #include "vector4f.h"
+#include "mesh.h"
+#include "objmodel.h"
 using namespace std;
 
 float toRadians(float angle) {
@@ -19,6 +21,15 @@ int main(int argc, char *argv[]) {
 
     Bitmap texture(32, 32, 3);
     texture.generateNoise();
+
+    Mesh *mesh;
+    Mesh mesh_data[5];
+    //mesh_data[0].initialize("icosphere.obj");
+
+    mesh = &mesh_data[0];
+    bool draw_triangle = true;
+    bool draw_wireframe = false;
+    bool draw_z_buffer = false;
 
     //Stars3D stars(4096, 64.0f, 0.1f, 72);
     //Random Triangle Vertices
@@ -64,9 +75,59 @@ int main(int argc, char *argv[]) {
                             return 0;
                         case SDLK_r:
                             rotation_check = (!rotation_check);
+                            break;
+                        case SDLK_1:
+                            if(mesh_data[0].isInitialized() == false) {
+                                mesh_data[0].initialize("icosphere.obj");
+                                cout << "icosphere.obj loaded" << endl;
+                            }
+                            mesh = &mesh_data[0];
+                            draw_triangle = false;
+                            break;
+                        case SDLK_2:
+                            if(mesh_data[1].isInitialized() == false) {
+                                mesh_data[1].initialize("sphere_high.obj");
+                                cout << "sphere_high.obj loaded" << endl;
+                            }
+                            mesh = &mesh_data[1];
+                            draw_triangle = false;
+                            break;
+                        case SDLK_3:
+                            if(mesh_data[2].isInitialized() == false) {
+                                mesh_data[2].initialize("monkey0.obj");
+                                cout << "monkey0.obj loaded" << endl;
+                            }
+                            mesh = &mesh_data[2];
+                            draw_triangle = false;
+                            break;
+                        case SDLK_4:
+                            if(mesh_data[3].isInitialized() == false) {
+                                mesh_data[3].initialize("cylinder.obj");
+                                cout << "cylinder.obj loaded" << endl;
+                            }
+                            mesh = &mesh_data[3];
+                            draw_triangle = false;
+                            break;
+                        case SDLK_5:
+                            if(mesh_data[4].isInitialized() == false) {
+                                mesh_data[4].initialize("cylinder_hollow.obj");
+                                cout << "cylinder_hollow.obj loaded" << endl;
+                            }
+                            mesh = &mesh_data[4];
+                            draw_triangle = false;
+                            break;
+                        case SDLK_t:
+                            draw_triangle = !draw_triangle;
+                            break;
+                        case SDLK_w:
+                            draw_wireframe = !draw_wireframe;
+                            break;
+                        case SDLK_z:
+                            draw_z_buffer = !draw_z_buffer;
                         default:
                             break;
                     }
+                    break;
                 default:
                     break;
 
@@ -80,7 +141,7 @@ int main(int argc, char *argv[]) {
         translation.initTranslation(0, 0, 3.0);
         Matrix4f rotation;
         if(rotation_check == true) {
-            rotation.initRotation(rot_counter, rot_counter, rot_counter);
+            rotation.initRotation(rot_counter, rot_counter + 90.0, rot_counter);
         }
         else {
             rotation.initRotation(0, rot_counter, 0);
@@ -88,11 +149,19 @@ int main(int argc, char *argv[]) {
         Matrix4f transform_ = projection.mul(translation.mul(rotation));
 
         display.render_context.clear(0);
+        display.render_context.clearDepthBuffer();
 
-        //Creating the triangle
-        display.render_context.fillTriangle(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), texture);
         //display.render_context.fillWireframe(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), 255, 0, 0, 2);
+        if(draw_triangle == true) {
+          display.render_context.fillTriangle(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), texture, draw_wireframe, false);
+        }
+        else {
+            display.render_context.drawMesh(*mesh, transform_, texture, draw_wireframe, false);
+        }
 
+        if(draw_z_buffer == true) {
+            display.render_context.drawZBuffer();
+        }
         display.renderImage();
 
         //updating the window

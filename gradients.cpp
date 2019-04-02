@@ -5,6 +5,11 @@ Gradients::Gradients(Vertex minYVert, Vertex midYVert, Vertex maxYVert)
     m_texCoordX = new float[3];
     m_texCoordY = new float[3];
     m_one_over_z = new float[3];
+    m_depth = new float[3];
+
+    m_depth[0] = minYVert.getPosition().getZ();
+    m_depth[1] = midYVert.getPosition().getZ();
+    m_depth[2] = maxYVert.getPosition().getZ();
 
     m_one_over_z[0] = 1.0/minYVert.getPosition().getW();
     m_one_over_z[1] = 1.0/midYVert.getPosition().getW();
@@ -32,6 +37,9 @@ Gradients::Gradients(Vertex minYVert, Vertex midYVert, Vertex maxYVert)
     m_texCoordY_YStep = calcYStep(m_texCoordY, minYVert, midYVert, maxYVert, one_over_dy);
     m_one_over_z_XStep = calcXStep(m_one_over_z, minYVert, midYVert, maxYVert, one_over_dx);
     m_one_over_z_YStep = calcYStep(m_one_over_z, minYVert, midYVert, maxYVert, one_over_dy);
+    m_depth_x_step = calcXStep(m_depth, minYVert, midYVert, maxYVert, one_over_dx);
+    m_depth_y_step = calcYStep(m_depth, minYVert, midYVert, maxYVert, one_over_dy);
+
 }
 
 float Gradients::calcXStep(float *values, Vertex minYVert, Vertex midYVert, Vertex maxYVert, float one_over_dx) {

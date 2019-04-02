@@ -2,15 +2,16 @@
 #define BITMAP_H
 
 #include <SDL.h>
+#include <SDL_Image.h>
+#include <iostream>
+
+using namespace std;
 
 class Bitmap
 {
-    unsigned int m_width;
-    unsigned int m_height;
-    unsigned int m_channels;
-    char *m_components;
     public:
         Bitmap();
+        //Bitmap(char *file_name);
         Bitmap(unsigned int width, unsigned int height, unsigned int channels = 3);
         virtual void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
         //to get the sdl surface of the image
@@ -35,6 +36,12 @@ class Bitmap
         ~Bitmap();
 
     protected:
+        unsigned int m_width;
+        unsigned int m_height;
+        unsigned int m_channels;
+        char *m_components;
+        SDL_Surface *m_image_surface;
+        bool have_surface;
 };
 
 #endif // BITMAP_H
