@@ -3,15 +3,17 @@
 #include "stars3D.h"
 #include "bitmap.h"
 #include "renderContext.h"
+#include "vector4f.h"
 using namespace std;
 
 int main(int argc, char *argv[]) {
     //creating the display and updating it
     Display display("Software Rendering", 1280, 720);
 
-    Stars3D stars(4096, 64.0f, 0.1f, 72);
+    //Stars3D stars(4096, 64.0f, 0.1f, 72);
+    //Random Triangle Vertices
     Vertex minYVert(100, 100);
-    Vertex midYVert(0, 200);
+    Vertex midYVert(150, 200);
     Vertex maxYVert(80, 300);
     unsigned long long int previous_time = SDL_GetTicks();
     //checking for any events that have occurred
