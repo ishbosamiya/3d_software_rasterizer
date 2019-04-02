@@ -19,8 +19,8 @@ int main(int argc, char *argv[]) {
 
     //Stars3D stars(4096, 64.0f, 0.1f, 72);
     //Random Triangle Vertices
-    Vertex minYVert(-1, -1, 0);
-    Vertex midYVert(0, 1, 0);
+    Vertex minYVert(0, 1, 0);
+    Vertex midYVert(-1, -1, 0);
     Vertex maxYVert(1, -1, 0);
 
     //setting up perspective
@@ -68,15 +68,16 @@ int main(int argc, char *argv[]) {
         //Setting up matrices for translation and rotation and the final transform
         rot_counter += delta / 500.0;
         Matrix4f translation;
-        translation.initTranslation(0.0, 0.0, 3.0);
+        translation.initTranslation(0, 0, 3.0);
         Matrix4f rotation;
-        rotation.initRotation(0.0, rot_counter, 0.0);
+        rotation.initRotation(rot_counter, rot_counter, rot_counter);
         Matrix4f transform_ = projection.mul(translation.mul(rotation));
 
         display.render_context.clear(0);
 
         //Creating the triangle
-        display.render_context.fillTriangle(maxYVert.transform(transform_), midYVert.transform(transform_), minYVert.transform(transform_));
+        display.render_context.fillTriangle(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_));
+        display.render_context.fillWireframe(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), 255, 0, 0, 2);
 
         display.renderImage();
 
