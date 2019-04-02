@@ -9,25 +9,28 @@
 
 #include "indexedmodel.h"
 #include "objmodel.h"
+#include "face.h"
 #include "vertex.h"
 
 class Mesh
 {
-    vector<Vertex> m_vertices;
-    vector<int> m_indices;
+    int no_of_positions;
+    int no_of_texCoords;
+    int no_of_faces;
+    vector<Vector4f> m_positions;
+    vector<Vector4f> m_texCoords;
+    vector<Face> m_faces;
     bool is_initialized;
     char *m_file_name;
 
-    void addElement(vector<Vertex> &m_list, Vertex data);
-    void addElement(vector<int> &m_list, int data);
-
-    Vector4f getElement(list<Vector4f> &m_list, int index);
-    int getElement(list<int> &m_list, int index);
-    void equateListToVector(vector<int> &m_vector, list<int> &m_list);
-
-    Vector4f getElement(vector<Vector4f> &m_list, int index);
-    Vertex getElement(vector<Vertex> &m_list, int index);
-    int getElement(vector<int> &m_list, int index);
+    template <typename T>
+    void addElement(vector<T> &m_list, T data);
+    template <typename T>
+    T getElement(list<T> &m_list, int index);
+    template <typename T>
+    void equateListToVector(vector<T> &m_vector, list<T> &m_list);
+    template <typename T>
+    T getElement(vector<T> &m_list, int index);
 
     bool readMeshFromFile();
     bool writeMeshToFile();
@@ -38,9 +41,13 @@ class Mesh
 
         Mesh* initialize(char *file_name);
 
-        Vertex getVertex(int i) { return getElement(m_vertices, i);}
-        int getIndex(int i) { return getElement(m_indices, i);}
-        int getNumIndices() { return m_indices.size();}
+        int getNumOfFaces() { return m_faces.size();}
+        Face getFace(int loc) { return m_faces[loc];}
+        Vector4f getPosition(int loc) { return m_positions[loc];}
+        Vector4f getTexCoord(int loc) { return m_texCoords[loc];}
+        vector<Face> &getFaces() { return m_faces;}
+        vector<Vector4f> &getPositions() { return m_positions;}
+        vector<Vector4f> &getTexCoords() { return m_texCoords;}
         bool isInitialized() { return is_initialized;}
 
         virtual ~Mesh();

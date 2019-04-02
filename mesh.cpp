@@ -13,14 +13,12 @@ Mesh* Mesh::initialize(char *file_name) {
     if(is_initialized) {
         return this;
     }
-//    *this = Mesh(file_name);
     m_file_name = file_name;
-    char *temp = new char[500];
+    char *temp = new char[strlen(file_name)];
     strcpy(temp, file_name);
     strcat(temp, ".mesh");
     ifstream fin;
     fin.open(temp);
-
     if(!fin.is_open()) {
         OBJModel obj(file_name);
         if(obj.hasLoaded() == false) {
@@ -30,12 +28,12 @@ Mesh* Mesh::initialize(char *file_name) {
         }
         IndexedModel model;
         obj.toIndexedModel(model);
-
-        for(int i = 0; i < model.getPositions().size(); i++) {
-            addElement(m_vertices, Vertex(getElement(model.getPositions(), i), getElement(model.getTexCoords(), i)));
-        }
-
-        equateListToVector(m_indices, model.getIndices());
+        equateListToVector(m_positions, model.getPositions());
+        equateListToVector(m_texCoords, model.getTexCoords());
+        equateListToVector(m_faces, model.getFaces());
+        no_of_positions = m_positions.size();
+        no_of_texCoords = m_texCoords.size();
+        no_of_faces = m_faces.size();
         writeMeshToFile();
         is_initialized = true;
     }
@@ -49,12 +47,12 @@ Mesh* Mesh::initialize(char *file_name) {
             }
             IndexedModel model;
             obj.toIndexedModel(model);
-
-            for(int i = 0; i < model.getPositions().size(); i++) {
-                addElement(m_vertices, Vertex(getElement(model.getPositions(), i), getElement(model.getTexCoords(), i)));
-            }
-
-            equateListToVector(m_indices, model.getIndices());
+            equateListToVector(m_positions, model.getPositions());
+            equateListToVector(m_texCoords, model.getTexCoords());
+            equateListToVector(m_faces, model.getFaces());
+            no_of_positions = m_positions.size();
+            no_of_texCoords = m_texCoords.size();
+            no_of_faces = m_faces.size();
             writeMeshToFile();
             is_initialized = true;
         }
@@ -77,12 +75,22 @@ bool Mesh::writeMeshToFile() {
         return false;
     }
 
-    for(int i = 0; i < getNumIndices(); i++) {
-        Vertex temp_vertex = getVertex(getIndex(i));
-        int temp_int = getIndex(i);
-        fout.write((char *)&temp_vertex, sizeof(Vertex));
-        fout.write((char *)&temp_int, sizeof(int));
+    fout.write((char *)&no_of_positions, sizeof(no_of_positions));
+    fout.write((char *)&no_of_texCoords, sizeof(no_of_texCoords));
+    fout.write((char *)&no_of_faces, sizeof(no_of_faces));
+    for(int i = 0; i < no_of_positions; i++) {
+        Vector4f position = m_positions[i];
+        fout.write((char *)&position, sizeof(position));
     }
+    for(int i = 0; i < no_of_texCoords; i++) {
+        Vector4f texCoord = m_texCoords[i];
+        fout.write((char *)&texCoord, sizeof(texCoord));
+    }
+    for(int i = 0; i < no_of_faces; i++) {
+        Face face = m_faces[i];
+        face.writeFaceToFile(fout);
+    }
+
     cout << m_file_name << " has been written to file" << endl;
     fout.close();
     delete temp;
@@ -99,21 +107,29 @@ bool Mesh::readMeshFromFile() {
         cout << "Error reading mesh from stored file" << endl;
         return false;
     }
-    bool index_line = false;
-    while(!fin.eof()) {
-        if(index_line == false) {
-            Vertex temp_vertex;
-            fin.read((char *)&temp_vertex, sizeof(Vertex));
-            addElement(m_vertices, temp_vertex);
-            index_line = !index_line;
-        }
-        else {
-            int temp_int;
-            fin.read((char *)&temp_int, sizeof(int));
-            addElement(m_indices, temp_int);
-            index_line = !index_line;
-        }
+
+    fin.read((char *)&no_of_positions, sizeof(int));
+    fin.read((char *)&no_of_texCoords, sizeof(int));
+    fin.read((char *)&no_of_faces, sizeof(int));
+    m_positions.reserve(no_of_positions);
+    m_texCoords.reserve(no_of_texCoords);
+    m_faces.reserve(no_of_faces);
+    for(int i = 0; i < no_of_positions; i++) {
+        Vector4f position;
+        fin.read((char *)&position, sizeof(Vector4f));
+        m_positions.push_back(position);
     }
+    for(int i = 0; i < no_of_texCoords; i++) {
+        Vector4f texCoord;
+        fin.read((char *)&texCoord, sizeof(Vector4f));
+        m_texCoords.push_back(texCoord);
+    }
+    for(int i = 0; i < no_of_faces; i++) {
+        Face face;
+        face.readFaceFromFile(fin);
+        m_faces.push_back(face);
+    }
+
     cout << m_file_name << " has been read from file" << endl;
     is_initialized = true;
     fin.close();
@@ -121,63 +137,36 @@ bool Mesh::readMeshFromFile() {
     return true;
 }
 
-void Mesh::addElement(vector<Vertex> &m_list, Vertex data) {
-    vector<Vertex>::iterator it;
-    it = m_list.end();
-    m_list.insert(it, data);
+template <typename T>
+void Mesh::addElement(vector<T> &m_list, T data) {
+    m_list.push_back(data);
 }
 
-void Mesh::addElement(vector<int> &m_list, int data) {
-    vector<int>::iterator it;
-    it = m_list.end();
-    m_list.insert(it, data);
+template <typename T>
+T Mesh::getElement(vector<T> &m_list, int index) {
+    m_list[index];
 }
 
-Vector4f Mesh::getElement(vector<Vector4f> &m_list, int index) {
-    vector<Vector4f>::iterator it;
+template <typename T>
+T Mesh::getElement(list<T> &m_list, int index) {
+    typename list<T>::iterator it;
     it = m_list.begin();
     advance(it, index);
     return *it;
 }
 
-Vector4f Mesh::getElement(list<Vector4f> &m_list, int index) {
-    list<Vector4f>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    return *it;
-}
-
-Vertex Mesh::getElement(vector<Vertex> &m_list, int index) {
-    vector<Vertex>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    return *it;
-}
-
-int Mesh::getElement(vector<int> &m_list, int index) {
-    vector<int>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    return *it;
-}
-
-int Mesh::getElement(list<int> &m_list, int index) {
-    list<int>::iterator it;
-    it = m_list.begin();
-    advance(it, index);
-    return *it;
-}
-
-void Mesh::equateListToVector(vector<int> &m_vector, list<int> &m_list) {
+template <typename T>
+void Mesh::equateListToVector(vector<T> &m_vector, list<T> &m_list) {
     for(int i = 0; i < m_list.size(); i++) {
-        int data = getElement(m_list, i);
+        T data = getElement(m_list, i);
         m_vector.push_back(data);
     }
 }
 
 Mesh::~Mesh()
 {
-    m_vertices.clear();
-    m_indices.clear();
+    m_positions.clear();
+    m_texCoords.clear();
+    m_faces.clear();
     delete [] m_file_name;
 }

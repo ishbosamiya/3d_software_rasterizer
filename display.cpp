@@ -89,5 +89,6 @@ void Display::renderImage(Bitmap &image){
 Display::~Display() {
     //deleting the context of window
     SDL_DestroyWindow(window);
+    cout << "freeing sdl_surface" << endl;
     SDL_FreeSurface(screenSurface);
 }

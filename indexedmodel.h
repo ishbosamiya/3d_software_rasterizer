@@ -3,6 +3,7 @@
 
 #include <list>
 
+#include "face.h"
 #include "vector4f.h"
 
 using namespace std;
@@ -13,7 +14,7 @@ class IndexedModel
     list<Vector4f> m_texCoords;
     list<Vector4f> m_normals;
     list<Vector4f> m_tangents;
-    list<int> m_indices;
+    list<Face> m_faces;
 
     public:
         IndexedModel();
@@ -21,16 +22,16 @@ class IndexedModel
         void calcNormals();
         void calcTangents();
 
-        Vector4f getElement(list<Vector4f> &m_list, int index);
-        int getElement(list<int> &m_list, int index);
-        void setElement(list<Vector4f> &m_list, int index, Vector4f data);
-        void setElement(list<int> &m_list, int index, int data);
+        template <typename T>
+        T getElement(list<T> &m_list, int index);
+        template <typename T>
+        void setElement(list<T> &m_list, int index, T data);
 
         list<Vector4f>& getPositions() { return m_positions;}
         list<Vector4f>& getTexCoords() { return m_texCoords;}
         list<Vector4f>& getNormals() { return m_normals;}
         list<Vector4f>& getTangents() { return m_tangents;}
-        list<int>& getIndices() { return m_indices;}
+        list<Face>& getFaces() { return m_faces;}
 
 
         virtual ~IndexedModel();

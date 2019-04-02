@@ -33,11 +33,21 @@ void RenderContext::initialize(unsigned int width, unsigned int height, unsigned
 }
 
 void RenderContext::drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
-    for(int i = 0; i < mesh.getNumIndices(); i+=3) {
-        fillTriangle(mesh.getVertex(mesh.getIndex(i)).transform(transform),
-                     mesh.getVertex(mesh.getIndex(i + 1)).transform(transform),
-                     mesh.getVertex(mesh.getIndex(i + 2)).transform(transform),
-                     texture, wireframe, back_face_culling);
+    for(int i = 0; i < mesh.getNumOfFaces(); i++) {
+        vector<Vertex> verts;
+        int no_of_verts = mesh.getFace(i).getNumOfVerts();
+        verts.reserve(no_of_verts);
+        for(int j = 0; j < no_of_verts; j++) {
+            Vector4f position = mesh.getPosition(mesh.getFace(i).getPosition(j));
+            Vector4f texCoord = mesh.getTexCoord(mesh.getFace(i).getTexCoord(j));
+            Vertex temp_vert(position, texCoord);
+            verts.push_back(temp_vert.transform(transform));
+        }
+        //here I can make the wireframe not have the triangle, but for the rasterizer I need to make them into triangles
+        for(int j = 0; j < verts.size() - 2; j++) {
+            fillTriangle(verts[0], verts[j + 1], verts[j + 2], texture, wireframe, back_face_culling);
+        }
+        verts.clear();
     }
 }
 
