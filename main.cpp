@@ -10,6 +10,9 @@ int main(int argc, char *argv[]) {
     Display display("Software Rendering", 1280, 720);
 
     Stars3D stars(4096, 64.0f, 0.1f, 72);
+    Vertex minYVert(100, 100);
+    Vertex midYVert(0, 200);
+    Vertex maxYVert(80, 300);
     unsigned long long int previous_time = SDL_GetTicks();
     //checking for any events that have occurred
     SDL_Event event;
@@ -37,13 +40,10 @@ int main(int argc, char *argv[]) {
         }
 
         //Program Logic after this
-        //stars.updateAndRender(display.render_context, delta);
         display.render_context.clear(0);
 
-        for(int i = 100; i < 200; i++) {
-            display.render_context.drawScanBuffer(i, 300 - i, 300 + i);
-        }
-        display.render_context.fillShape(100, 200);
+        //Creating the triangle
+        display.render_context.fillTriangle(maxYVert, midYVert, minYVert);
 
         display.renderImage();
 
