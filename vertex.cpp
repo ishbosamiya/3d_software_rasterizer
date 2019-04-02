@@ -14,6 +14,23 @@ Vertex::Vertex(Vector4f pos, Vector4f texCoords) {
     m_texCoords = texCoords;
 }
 
+//general getter for the x y z and w
+float Vertex::get(int index) {
+    switch(index) {
+        case 0:
+            return m_pos.getX();
+        case 1:
+            return m_pos.getY();
+        case 2:
+            return m_pos.getZ();
+        case 3:
+            return m_pos.getW();
+        default:
+            cout << "Wrong Index In Vertex Getter!!! " << index << endl;
+            return 0;
+    }
+}
+
 //Cross product of the vectors formed by current vertex, b and c
 float Vertex::triangleArea(Vertex b, Vertex c) {
     float x1 = b.getX() - m_pos.getX();
@@ -35,6 +52,16 @@ Vertex Vertex::transform(Matrix4f transform_) {
 Vertex Vertex::perspectiveDivide() {
     return Vertex(Vector4f(m_pos.getX()/m_pos.getW(), m_pos.getY()/m_pos.getW(), m_pos.getZ()/m_pos.getW(), m_pos.getW())
                   , m_texCoords);
+}
+
+Vertex Vertex::lerp(Vertex other, float lerp_amount) {
+    return Vertex(m_pos.lerp(other.getPosition(), lerp_amount), m_texCoords.lerp(other.getTexCoords(), lerp_amount));
+}
+
+bool Vertex::isInsideViewFrustum() {
+    return (fabs(m_pos.getX()) <= fabs(m_pos.getW()) &&
+            fabs(m_pos.getY()) <= fabs(m_pos.getW()) &&
+            fabs(m_pos.getZ()) <= fabs(m_pos.getW()));
 }
 
 Vertex::~Vertex()

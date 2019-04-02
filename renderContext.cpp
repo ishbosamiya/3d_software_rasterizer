@@ -41,13 +41,116 @@ void RenderContext::drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, b
     }
 }
 
+bool RenderContext::clipPolygonAxis(vector<Vertex> &vertices, vector<Vertex> &auxillary_vector, int component_index) {
+    clipPolygonComponent(vertices, component_index, 1.0, auxillary_vector);
+    vertices.clear();
+
+    if(auxillary_vector.empty()) {
+        return false;
+    }
+
+    clipPolygonComponent(auxillary_vector, component_index, -1.0, vertices);
+    auxillary_vector.clear();
+
+    return !vertices.empty();
+}
+
+void RenderContext::clipPolygonComponent(vector<Vertex> &vertices, int component_index, float component_factor, vector<Vertex> &result) {
+    Vertex previous_vertex = vertices[vertices.size() -1];
+    float previous_component = previous_vertex.get(component_index) * component_factor;
+    bool previous_inside = previous_component <= previous_vertex.getPosition().getW();
+
+    result.reserve(vertices.size());
+
+    for(int i = 0; i < vertices.size(); i++) {
+        Vertex current_vertex = vertices[i];
+        float current_component = current_vertex.get(component_index) * component_factor;
+        bool current_inside = current_component <= current_vertex.getPosition().getW();
+
+        if(current_inside ^ previous_inside) {
+            float lerp_amount = (previous_vertex.getPosition().getW() - previous_component)/
+                                ((previous_vertex.getPosition().getW() - previous_component) -
+                                 (current_vertex.getPosition().getW() - current_component));
+
+            result.push_back(previous_vertex.lerp(current_vertex, lerp_amount));
+        }
+
+        if(current_inside) {
+            result.push_back(current_vertex);
+        }
+
+        previous_vertex = current_vertex;
+        previous_component = current_component;
+        previous_inside = current_inside;
+    }
+}
+
+void RenderContext::drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling) {
+    //if all inside then do not clip
+    if(v1.isInsideViewFrustum() && v2.isInsideViewFrustum() & v3.isInsideViewFrustum()) {
+        fillTriangle(v1, v2, v3, texture, back_face_culling);
+        return;
+    }
+
+    vector<Vertex> vertices;
+    vertices.reserve(6);
+    vector<Vertex> auxially_vector;
+    auxially_vector.reserve(6);
+
+    vertices.push_back(v1);
+    vertices.push_back(v2);
+    vertices.push_back(v3);
+
+    if(clipPolygonAxis(vertices, auxially_vector, 0) &&
+       clipPolygonAxis(vertices, auxially_vector, 1) &&
+       clipPolygonAxis(vertices, auxially_vector, 2)) {
+        Vertex initial_vertex = vertices[0];
+        for(int i = 1; i < vertices.size() - 1; i++) {
+            fillTriangle(initial_vertex, vertices[i], vertices[i + 1], texture, back_face_culling);
+        }
+    }
+
+    vertices.clear();
+    auxially_vector.clear();
+}
+
+void RenderContext::drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling) {
+    //if all inside then do not clip
+    if(v1.isInsideViewFrustum() && v2.isInsideViewFrustum() & v3.isInsideViewFrustum()) {
+        fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
+        return;
+    }
+
+    vector<Vertex> vertices;
+    vertices.reserve(6);
+    vector<Vertex> auxially_vector;
+    auxially_vector.reserve(6);
+
+    vertices.push_back(v1);
+    vertices.push_back(v2);
+    vertices.push_back(v3);
+
+    if(clipPolygonAxis(vertices, auxially_vector, 0) &&
+       clipPolygonAxis(vertices, auxially_vector, 1) &&
+       clipPolygonAxis(vertices, auxially_vector, 2)) {
+        Vertex initial_vertex = vertices[0];
+        for(int i = 1; i < vertices.size() - 1; i++) {
+            fillWireframe(initial_vertex, vertices[i], vertices[i + 1], r, g, b, thickness, back_face_culling);
+        }
+    }
+
+    vertices.clear();
+    auxially_vector.clear();
+}
+
 //while needing to render the triangles with wireframe around them
 void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool wireframe, bool back_face_culling) {
     if(wireframe == true) {
-        fillWireframe(v1, v2, v3, 255, 170, 64, 1, back_face_culling);
+        drawWireframe(v1, v2, v3, 255, 170, 64, 1, back_face_culling);
     }
     else {
-        fillTriangle(v1, v2, v3, texture, back_face_culling);
+        //changed here
+        drawTriangle(v1, v2, v3, texture, back_face_culling);
     }
 }
 

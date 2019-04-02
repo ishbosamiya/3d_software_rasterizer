@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <limits>
+#include <vector>
 #include <math.h>
 
 #include "bitmap.h"
@@ -17,6 +18,8 @@ class RenderContext: public Bitmap
     void scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture);
     void drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture);
     void drawWire(Edge &edge, int thickness, char r, char g, char b);
+    void clipPolygonComponent(vector<Vertex> &vertices, int component_index, float component_factor, vector<Vertex> &result);
+    bool clipPolygonAxis(vector<Vertex> &vertices, vector<Vertex> &auxillary_vector, int component_index);
 
     float *m_z_buffer;
 
@@ -30,6 +33,8 @@ class RenderContext: public Bitmap
         void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool wireframe, bool back_face_culling);
         void fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling);
         void drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling);
+        void drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling);
+        void drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling);
 
         void clearDepthBuffer();
         void drawZBuffer();

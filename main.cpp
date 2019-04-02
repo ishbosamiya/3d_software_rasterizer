@@ -138,13 +138,13 @@ int main(int argc, char *argv[]) {
         rot_counter += delta / 500.0;
         //translation
         if(mesh == &mesh_data[5]) {
-            translation.initTranslation(0, -1.5, 3.0);
+            translation.initTranslation(0, -1.5, 3.0 - (3.0 * sin(rot_counter)));
         }
         else if(mesh == &mesh_data[6]) {
-            translation.initTranslation(0, -0.5, 3.0);
+            translation.initTranslation(0, -0.5, 3.0 - (3.0 * sin(rot_counter)));
         }
         else {
-            translation.initTranslation(0, 0, 3.0);
+            translation.initTranslation(0, 0, 3.0 - (3.0 * sin(rot_counter)));
         }
         //rotation
         if(rotation_check == true && mesh != &mesh_data[5] && mesh != &mesh_data[6]) {
