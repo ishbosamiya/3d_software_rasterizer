@@ -6,15 +6,22 @@
 
 class Gradients
 {
-    Vector4f *m_color;
-    Vector4f m_color_x_step;
-    Vector4f m_color_y_step;
+    float *m_texCoordX;
+    float *m_texCoordY;
+
+    float m_texCoordX_XStep;
+    float m_texCoordX_YStep;
+    float m_texCoordY_XStep;
+    float m_texCoordY_YStep;
 
     public:
         Gradients(Vertex minYVert, Vertex midYVert, Vertex maxYVert);
-        Vector4f getColor(int loc) {return m_color[loc];}
-        Vector4f getColorXStep() {return m_color_x_step;}
-        Vector4f getColorYStep() {return m_color_y_step;}
+        float getTexCoordX(int loc) {return m_texCoordX[loc];}
+        float getTexCoordY(int loc) {return m_texCoordY[loc];}
+        float getTexCoordX_XStep() { return m_texCoordX_XStep;}
+        float getTexCoordX_YStep() { return m_texCoordX_YStep;}
+        float getTexCoordY_XStep() { return m_texCoordY_XStep;}
+        float getTexCoordY_YStep() { return m_texCoordY_YStep;}
         ~Gradients();
 
     protected:

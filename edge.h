@@ -13,8 +13,10 @@ class Edge
     int m_x_end;
     int m_y_start;
     int m_y_end;
-    Vector4f m_color;
-    Vector4f m_color_step;
+    float m_texCoordX;
+    float m_texCoordXStep;
+    float m_texCoordY;
+    float m_texCoordYStep;
 
     public:
         Edge(Gradients gradients, Vertex minYVert, Vertex maxYVert, int minYVertIndex);
@@ -24,7 +26,8 @@ class Edge
         int getXEnd();
         int getYStart();
         int getYEnd();
-        Vector4f getColor();
+        float getTexCoordX();
+        float getTexCoordY();
         ~Edge();
 
     protected:

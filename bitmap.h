@@ -21,6 +21,10 @@ class Bitmap
         void drawPixel(int x, int y, char r, char g, char b);
         //to generate a noisy image
         void generateNoise();
+        //for drawing pixel from a defined texture map
+        void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src);
+
+        char getComponent(int index) { return m_components[index];}
 
         int getWidth() {
             return m_width;

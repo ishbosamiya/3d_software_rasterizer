@@ -8,14 +8,14 @@
 class Vertex
 {
     Vector4f m_pos;
-    Vector4f m_color;
+    Vector4f m_texCoords;
 
     public:
         Vertex(float x, float y, float z);
         Vertex(Vector4f pos, Vector4f color);
         float getX() {return m_pos.getX();}
         float getY() {return m_pos.getY();}
-        Vector4f getColor() {return m_color;}
+        Vector4f getTexCoords() {return m_texCoords;}
         float triangleArea(Vertex b, Vertex c);
         Vertex transform(Matrix4f transform_);
         Vertex perspectiveDivide();

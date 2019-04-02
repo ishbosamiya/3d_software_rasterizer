@@ -17,16 +17,22 @@ Edge::Edge(Gradients gradients, Vertex minYVert, Vertex maxYVert, int minYVertIn
     m_x = minYVert.getX() + y_pre_step * m_x_step;
     float x_pre_step = m_x - minYVert.getX();
 
-    m_color = gradients.getColor(minYVertIndex).add(
-                gradients.getColorYStep().mul(y_pre_step)).add(
-                gradients.getColorXStep().mul(x_pre_step));
+    m_texCoordX = gradients.getTexCoordX(minYVertIndex) +
+                gradients.getTexCoordX_XStep() * x_pre_step +
+                gradients.getTexCoordX_YStep() * y_pre_step;
+    m_texCoordXStep = gradients.getTexCoordX_YStep() + gradients.getTexCoordX_XStep() * m_x_step;
 
-    m_color_step = gradients.getColorYStep().add(gradients.getColorXStep().mul(m_x_step));
+    m_texCoordY = gradients.getTexCoordY(minYVertIndex) +
+                gradients.getTexCoordY_XStep() * x_pre_step +
+                gradients.getTexCoordY_YStep() * y_pre_step;
+    m_texCoordYStep = gradients.getTexCoordY_YStep() + gradients.getTexCoordY_XStep() * m_x_step;
+
 }
 
 void Edge::step() {
     m_x += m_x_step;
-    m_color = m_color.add(m_color_step);
+    m_texCoordX += m_texCoordXStep;
+    m_texCoordY += m_texCoordYStep;
 }
 
 float Edge::getX() {
@@ -49,8 +55,12 @@ int Edge::getYEnd() {
     return m_y_end;
 }
 
-Vector4f Edge::getColor() {
-    return m_color;
+float Edge::getTexCoordX() {
+    return m_texCoordX;
+}
+
+float Edge::getTexCoordY() {
+    return m_texCoordY;
 }
 
 Edge::~Edge()

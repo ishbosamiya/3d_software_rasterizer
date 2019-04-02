@@ -18,7 +18,7 @@ void RenderContext::initialize(unsigned int width, unsigned int height, unsigned
 }
 
 //creating a global triangle generation function that works with any ordering of the vertices
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3) {
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture) {
     //randomly assigning values to the min, mid and max vertices
     //will later be sorted for the correct order
     //adding the perspective transforms to the triangle vertices
@@ -56,22 +56,22 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3) {
     }
 
     //rendering the triangle without using memory buffers
-    scanTriangle(minYVert, midYVert, maxYVert, handedness);
+    scanTriangle(minYVert, midYVert, maxYVert, handedness, texture);
 }
 
-void RenderContext::scanTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVert, bool handedness) {
+void RenderContext::scanTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVert, bool handedness, Bitmap texture) {
     Gradients gradients(minYVert, midYVert, maxYVert);
 
     Edge top_to_bottom(gradients, minYVert, maxYVert, 0);
     Edge top_to_middle(gradients, minYVert, midYVert, 0);
     Edge middle_to_bottom(gradients, midYVert, maxYVert, 1);
 
-    scanEdges(gradients, top_to_bottom, top_to_middle, handedness);
-    scanEdges(gradients, top_to_bottom, middle_to_bottom, handedness);
+    scanEdges(gradients, top_to_bottom, top_to_middle, handedness, texture);
+    scanEdges(gradients, top_to_bottom, middle_to_bottom, handedness, texture);
 }
 
 //getting information for (horizontal) lines from edge to edge
-void RenderContext::scanEdges(Gradients gradients, Edge &a, Edge &b, bool handedness) {
+void RenderContext::scanEdges(Gradients gradients, Edge &a, Edge &b, bool handedness, Bitmap texture) {
     //making sure that the left and right edges are on their correct sides
     Edge left = a;
     Edge right = b;
@@ -101,36 +101,39 @@ void RenderContext::scanEdges(Gradients gradients, Edge &a, Edge &b, bool handed
 
     //sending data to render the horizontal line
     for(int i = y_start; i < y_end; i++) {
-        drawScanLine(gradients, left, right, i);
+        drawScanLine(gradients, left, right, i, texture);
         left.step();
         right.step();
     }
 }
 
-void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, int j) {
+void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, int j, Bitmap texture) {
     //basic sweep render of all the pixels between the starting x coordinate and the ending x coordinate
     int x_min = ceil(left.getX());
     int x_max = ceil(right.getX());
 
     //for correct colors based on the position, otherwise there is a difference between the actual x and the ceil(x) which causes the colors to be slightly off
-    float x_pre_step = x_min - left.getX();
+    float x_pre_step = (float)x_min - left.getX();
 
-    Vector4f min_color = left.getColor().add(gradients.getColorXStep().mul(x_pre_step));
-    Vector4f max_color = right.getColor().add(gradients.getColorXStep().mul(x_pre_step));
-
-
-    float lerp_amt = 0.0;
-    float lerp_step = 1.0 / (float)(x_max - x_min);
+    //
+    float texCoordX = left.getTexCoordX() + gradients.getTexCoordX_XStep() * x_pre_step;
+    float texCoordY = left.getTexCoordY() + gradients.getTexCoordY_XStep() * x_pre_step;
 
     for(int i = x_min; i < x_max; i++) {
-        Vector4f color = min_color.lerp(max_color, lerp_amt);
+//        char r = (char)(color.getX() * 255.0 + 0.5);
+//        char g = (char)(color.getY() * 255.0 + 0.5);
+//        char b = (char)(color.getZ() * 255.0 + 0.5);
+//
+//        drawPixel(i, j, r, g, b);
 
-        char r = (char)(color.getX() * 255.0 + 0.5);
-        char g = (char)(color.getY() * 255.0 + 0.5);
-        char b = (char)(color.getZ() * 255.0 + 0.5);
+        int src_X = (int)(texCoordX * (texture.getWidth() - 1) + 0.5f);
+        int src_Y = (int)(texCoordY * (texture.getHeight() - 1) + 0.5f);
 
-        drawPixel(i, j, r, g, b);
-        lerp_amt += lerp_step;
+        copyPixel(i, j, src_X, src_Y, texture);
+
+        texCoordX += gradients.getTexCoordX_XStep();
+        //std::cout << "texCoordX: " << texCoordX << std::endl;
+        texCoordY += gradients.getTexCoordY_XStep();
     }
 }
 
@@ -247,8 +250,8 @@ void RenderContext::drawWire(Edge edge, int thickness, char r, char g, char b) {
 }
 
 //while needing to render the triangles with wireframe around them
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, bool wireframe) {
-    fillTriangle(v1, v2, v3);
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe) {
+    fillTriangle(v1, v2, v3, texture);
     fillWireframe(v1, v2, v3, 100, 100, 100, 2);
 }
 

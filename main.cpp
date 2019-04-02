@@ -17,14 +17,17 @@ int main(int argc, char *argv[]) {
     //creating the display and updating it
     Display display("Software Rendering", 1280, 720);
 
+    Bitmap texture(32, 32, 3);
+    texture.generateNoise();
+
     //Stars3D stars(4096, 64.0f, 0.1f, 72);
     //Random Triangle Vertices
     Vertex minYVert(Vector4f(-1, -1, 0, 1),
-                    Vector4f(1, 0, 0, 0));
+                    Vector4f(0, 0, 0, 0));
     Vertex midYVert(Vector4f(0, 1, 0, 1),
-                    Vector4f(0, 1, 0, 0));
+                    Vector4f(0.5, 1, 0, 0));
     Vertex maxYVert(Vector4f(1, -1, 0, 1),
-                    Vector4f(0, 0, 1, 0));
+                    Vector4f(1, 0, 0, 0));
 
     //setting up perspective
     Matrix4f projection;
@@ -79,7 +82,7 @@ int main(int argc, char *argv[]) {
         display.render_context.clear(0);
 
         //Creating the triangle
-        display.render_context.fillTriangle(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_));
+        display.render_context.fillTriangle(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), texture);
         //display.render_context.fillWireframe(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), 255, 0, 0, 2);
 
         display.renderImage();

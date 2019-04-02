@@ -53,6 +53,14 @@ void Bitmap::drawPixel(int x, int y, char r, char g, char b) {
     m_components[index + 2] = b;
 }
 
+void Bitmap::copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src) {
+    int destIndex = (dest_X + dest_Y * m_width) * m_channels;
+    int srcIndex = (src_X + src_Y * src.getWidth()) * m_channels;
+    m_components[destIndex + 0] = src.getComponent(srcIndex + 0);
+    m_components[destIndex + 1] = src.getComponent(srcIndex + 1);
+    m_components[destIndex + 2] = src.getComponent(srcIndex + 2);
+}
+
 void Bitmap::generateNoise() {
     //adding random r, g, b values to each pixel
     srand(10);
@@ -64,5 +72,5 @@ void Bitmap::generateNoise() {
 }
 
 Bitmap::~Bitmap() {
-    //dtor
+    //delete m_components;
 }
