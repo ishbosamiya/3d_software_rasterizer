@@ -15,6 +15,7 @@ class Vertex
         Vertex(Vector4f pos, Vector4f color);
         float getX() {return m_pos.getX();}
         float getY() {return m_pos.getY();}
+        Vector4f getPosition() {return m_pos;}
         Vector4f getTexCoords() {return m_texCoords;}
         float triangleArea(Vertex b, Vertex c);
         Vertex transform(Matrix4f transform_);

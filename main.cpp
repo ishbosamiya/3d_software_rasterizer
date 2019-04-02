@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
     projection.initPerspective(toRadians(70.0), (float)display.render_context.getWidth()/(float)display.render_context.getHeight(), 0.1, 1000.0);
 
     //test code for rotation of triangle
+    bool rotation_check = false;
     float rot_counter = 0.0;
 
     unsigned long long int previous_time = SDL_GetTicks();
@@ -61,6 +62,8 @@ int main(int argc, char *argv[]) {
                     switch(event.key.keysym.sym) {
                         case SDLK_ESCAPE:
                             return 0;
+                        case SDLK_r:
+                            rotation_check = (!rotation_check);
                         default:
                             break;
                     }
@@ -76,7 +79,12 @@ int main(int argc, char *argv[]) {
         Matrix4f translation;
         translation.initTranslation(0, 0, 3.0);
         Matrix4f rotation;
-        rotation.initRotation(0, rot_counter, 0);
+        if(rotation_check == true) {
+            rotation.initRotation(rot_counter, rot_counter, rot_counter);
+        }
+        else {
+            rotation.initRotation(0, rot_counter, 0);
+        }
         Matrix4f transform_ = projection.mul(translation.mul(rotation));
 
         display.render_context.clear(0);

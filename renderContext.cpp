@@ -115,9 +115,15 @@ void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, i
     //for correct colors based on the position, otherwise there is a difference between the actual x and the ceil(x) which causes the colors to be slightly off
     float x_pre_step = (float)x_min - left.getX();
 
+    float x_dist = right.getX() - left.getX();
+    float texCoordX_XStep = (right.getTexCoordX() - left.getTexCoordX())/x_dist;
+    float texCoordY_XStep = (right.getTexCoordY() - left.getTexCoordY())/x_dist;
+    float one_over_z_XStep = (right.getOneOverZ() - left.getOneOverZ())/x_dist;
+
     //
-    float texCoordX = left.getTexCoordX() + gradients.getTexCoordX_XStep() * x_pre_step;
-    float texCoordY = left.getTexCoordY() + gradients.getTexCoordY_XStep() * x_pre_step;
+    float texCoordX = left.getTexCoordX() + texCoordX_XStep * x_pre_step;
+    float texCoordY = left.getTexCoordY() + texCoordY_XStep * x_pre_step;
+    float one_over_z = left.getOneOverZ() + one_over_z_XStep * x_pre_step;
 
     for(int i = x_min; i < x_max; i++) {
 //        char r = (char)(color.getX() * 255.0 + 0.5);
@@ -126,14 +132,15 @@ void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, i
 //
 //        drawPixel(i, j, r, g, b);
 
-        int src_X = (int)(texCoordX * (texture.getWidth() - 1) + 0.5f);
-        int src_Y = (int)(texCoordY * (texture.getHeight() - 1) + 0.5f);
+        float z = 1.0/one_over_z;
+        int src_X = (int)((texCoordX * z) * (texture.getWidth() - 1) + 0.5f);
+        int src_Y = (int)((texCoordY * z) * (texture.getHeight() - 1) + 0.5f);
 
         copyPixel(i, j, src_X, src_Y, texture);
 
-        texCoordX += gradients.getTexCoordX_XStep();
-        //std::cout << "texCoordX: " << texCoordX << std::endl;
-        texCoordY += gradients.getTexCoordY_XStep();
+        one_over_z += one_over_z_XStep;
+        texCoordX += texCoordX_XStep;
+        texCoordY += texCoordY_XStep;
     }
 }
 
