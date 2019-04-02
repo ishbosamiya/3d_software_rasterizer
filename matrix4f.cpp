@@ -1,6 +1,7 @@
 #include "matrix4f.h"
 #include <math.h>
 
+//initialization of the matrix
 Matrix4f::Matrix4f()
 {
     m = new float*[4];
@@ -13,6 +14,7 @@ Matrix4f::Matrix4f(float **m) {
     this->m = m;
 }
 
+//creating identity matrix
 Matrix4f Matrix4f::initIdentity() {
     m[0][0] = 1;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = 0;
     m[1][0] = 0;	m[1][1] = 1;	m[1][2] = 0;	m[1][3] = 0;
@@ -22,6 +24,7 @@ Matrix4f Matrix4f::initIdentity() {
     return Matrix4f(m);
 }
 
+//performing a screen space transform
 Matrix4f Matrix4f::initScreenSpaceTransform(float half_width, float half_height) {
     m[0][0] = half_width;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = half_width;
     m[1][0] = 0;	m[1][1] = -half_height;	m[1][2] = 0;	m[1][3] = half_height;
@@ -31,6 +34,7 @@ Matrix4f Matrix4f::initScreenSpaceTransform(float half_width, float half_height)
     return Matrix4f(m);
 }
 
+//for moving the vertices by x, y and z coordinates
 Matrix4f Matrix4f::initTranslation(float x, float y, float z) {
     m[0][0] = 1;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = x;
     m[1][0] = 0;	m[1][1] = 1;	m[1][2] = 0;	m[1][3] = y;

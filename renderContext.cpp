@@ -1,5 +1,7 @@
 #include "renderContext.h"
 
+#include "math.h"
+
 RenderContext::RenderContext() {
     //ctor
 }
@@ -38,14 +40,14 @@ void RenderContext::fillShape(int yMin, int yMax) {
 //converting the the given vertices into a line for the algorithm to use
 void RenderContext::scanConvertLine(Vertex minYVert, Vertex maxYVert, int whichSide) {
     //getting the starting and x and y coordinates for the line
-    int y_start = (int)minYVert.getY();
-    int y_end = (int)maxYVert.getY();
-    int x_start = (int)minYVert.getX();
-    int x_end = (int)maxYVert.getX();
+    int y_start = (int)ceil(minYVert.getY());
+    int y_end = (int)ceil(maxYVert.getY());
+    int x_start = (int)ceil(minYVert.getX());
+    int x_end = (int)ceil(maxYVert.getX());
 
     //getting the x axis and y axis distance between the 2 vertices
-    int y_dist = y_end - y_start;
-    int x_dist = x_end - x_start;
+    int y_dist = maxYVert.getY() - minYVert.getY();
+    int x_dist = maxYVert.getX() - minYVert.getX();
 
     if(y_dist <= 0) {
         return;
@@ -53,11 +55,12 @@ void RenderContext::scanConvertLine(Vertex minYVert, Vertex maxYVert, int whichS
 
     //having a step to move along the x axis as the y coordinate changes
     float x_step = (float)x_dist/(float)y_dist;
-    float cur_x = (float)x_start;
+    float y_prestep = y_start - minYVert.getY();
+    float cur_x = minYVert.getX() + y_prestep * x_step;
 
     //adding the starting and ending x coordinate for entire y axis (starting at y_start, ending at y_end)
     for(int i = y_start; i < y_end; i++) {
-        m_scan_buffer[i * 2 + whichSide] = (int)cur_x;
+        m_scan_buffer[i * 2 + whichSide] = (int)ceil(cur_x);
         cur_x += x_step;
     }
 }
@@ -69,13 +72,16 @@ void RenderContext::scanConvertTriangle(Vertex minYVert, Vertex midYVert, Vertex
     scanConvertLine(midYVert, maxYVert, 1 - handiness);
 }
 
-//creating a global triangle generation function that works with any ordering of the verticies
+//creating a global triangle generation function that works with any ordering of the vertices
 void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3) {
     //randomly assigning values to the min, mid and max vertices
     //will later be sorted for the correct order
-    Vertex minYVert = v1;
-    Vertex midYVert = v2;
-    Vertex maxYVert = v3;
+    //adding the perspective transforms to the triangle vertices
+    Matrix4f screen_space_transform;
+    screen_space_transform.initScreenSpaceTransform(getWidth()/2, getHeight()/2);
+    Vertex minYVert = v1.transform(screen_space_transform).perspectiveDivide();
+    Vertex midYVert = v2.transform(screen_space_transform).perspectiveDivide();
+    Vertex maxYVert = v3.transform(screen_space_transform).perspectiveDivide();
 
     //Sorting the vertices
     if(maxYVert.getY() < midYVert.getY()) {
@@ -96,11 +102,18 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3) {
 
     //to figure out the side at which the triangle should be rendered, the cross product of the vectors is done
     float area = minYVert.triangleArea(maxYVert, midYVert);
-    int handiness = area >= 0 ? 1 : 0;
+    int handedness;
+    //handiness = area >= 0 ? 1 : 0;
+    if(area >= 0) {
+        handedness = 1;
+    }
+    else {
+        handedness = 0;
+    }
 
     //Creating the triangle
-    scanConvertTriangle(minYVert, midYVert, maxYVert, 0);
-    fillShape((int)minYVert.getY(), (int)maxYVert.getY());
+    scanConvertTriangle(minYVert, midYVert, maxYVert, handedness);
+    fillShape((int)ceil(minYVert.getY()), (int)ceil(maxYVert.getY()));
 }
 
 RenderContext::~RenderContext()
