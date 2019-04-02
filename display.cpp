@@ -25,9 +25,9 @@ Display::Display(char *title, unsigned int width, unsigned int height) {
     }
 
     //making the image
-    bitmap.initialize(width, height, 3);
-    bitmap.clear(25);
-    bitmap.generateNoise();
+    render_context.initialize(width, height, 3);
+    render_context.clear(25);
+    render_context.generateNoise();
 
     //making the window surface
     screenSurface = SDL_GetWindowSurface(window);
@@ -61,7 +61,7 @@ void Display::updateWindow() {
         }
 
         //Program Logic after this
-        SDL_BlitSurface(bitmap.getSurface(), NULL, screenSurface, NULL);
+        SDL_BlitSurface(render_context.getSurface(), NULL, screenSurface, NULL);
 
         //updating the window
         SDL_UpdateWindowSurface(window);
@@ -69,7 +69,7 @@ void Display::updateWindow() {
 }
 
 void Display::renderImage(){
-    SDL_BlitSurface(bitmap.getSurface(), NULL, screenSurface, NULL);
+    SDL_BlitSurface(render_context.getSurface(), NULL, screenSurface, NULL);
 }
 
 Display::~Display() {

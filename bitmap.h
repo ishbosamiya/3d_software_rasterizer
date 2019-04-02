@@ -12,7 +12,7 @@ class Bitmap
     public:
         Bitmap();
         Bitmap(unsigned int width, unsigned int height, unsigned int channels = 3);
-        void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
+        virtual void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
         //to get the sdl surface of the image
         SDL_Surface* getSurface();
         //to clear out the image to one single shade of colour

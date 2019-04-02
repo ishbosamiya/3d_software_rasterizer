@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 #include "bitmap.h"
+#include "renderContext.h"
 
 class Display
 {
@@ -13,7 +14,7 @@ class Display
     public:
         SDL_Window *window;
         SDL_Surface *screenSurface;
-        Bitmap bitmap;
+        RenderContext render_context;
         Display(char *title, unsigned int width, unsigned int height);
         //refreshing the window for image updating
         void updateWindow();

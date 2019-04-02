@@ -2,6 +2,7 @@
 #include "display.h"
 #include "stars3D.h"
 #include "bitmap.h"
+#include "renderContext.h"
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -36,7 +37,14 @@ int main(int argc, char *argv[]) {
         }
 
         //Program Logic after this
-        stars.updateAndRender(display.bitmap, delta);
+        //stars.updateAndRender(display.render_context, delta);
+        display.render_context.clear(0);
+
+        for(int i = 100; i < 200; i++) {
+            display.render_context.drawScanBuffer(i, 300 - i, 300 + i);
+        }
+        display.render_context.fillShape(100, 200);
+
         display.renderImage();
 
         //updating the window
