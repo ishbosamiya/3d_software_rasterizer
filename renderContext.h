@@ -35,6 +35,7 @@ class RenderContext: public Bitmap
         void drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling);
         void drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling);
         void drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling);
+        void drawWire(Vertex v1, Vertex v2, int thickness, char r, char g, char b);
 
         void clearDepthBuffer();
         void drawZBuffer();

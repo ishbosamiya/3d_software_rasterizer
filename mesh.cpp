@@ -14,7 +14,7 @@ Mesh* Mesh::initialize(char *file_name) {
         return this;
     }
     m_file_name = file_name;
-    char *temp = new char[strlen(file_name)];
+    char *temp = new char[strlen(file_name) + 50];
     strcpy(temp, file_name);
     strcat(temp, ".mesh");
     ifstream fin;

@@ -1,10 +1,13 @@
 #include <iostream>
+
 #include "display.h"
 #include "bitmap.h"
 #include "renderContext.h"
 #include "vector4f.h"
 #include "mesh.h"
 #include "objmodel.h"
+#include "transform.h"
+#include "camera.h"
 using namespace std;
 
 float toRadians(float angle) {
@@ -26,8 +29,12 @@ int main(int argc, char *argv[]) {
 
     Mesh *mesh;
     Mesh mesh_data[7];
+    mesh = mesh_data[2].initialize("monkey0.obj");
+    Transform transform_mesh(Vector4f(0.0, 0.0, 3.0, 1.0));
+    Mesh terrainMesh;
+    terrainMesh.initialize("terrain0.obj");
+    Transform terrain_transform(Vector4f(0.0, -1.0, 0.0, 1.0));
 
-    mesh = &mesh_data[0];
     bool draw_triangle = true;
     bool draw_wireframe = false;
     bool draw_z_buffer = false;
@@ -48,6 +55,10 @@ int main(int argc, char *argv[]) {
     Matrix4f rotation;
     Matrix4f scale;
 
+    Camera camera(projection);
+    camera.rotate(Vector4f(0, 1, 0, 1), toRadians(180));
+    camera.move(Vector4f(0, 0, -1, 1), -7);
+
     //test code for rotation of triangle
     bool rotation_check = false;
     float rot_counter = 0.0;
@@ -55,6 +66,8 @@ int main(int argc, char *argv[]) {
     unsigned long long int previous_time = SDL_GetTicks();
     //checking for any events that have occurred
     SDL_Event event;
+    int mouse_x;
+    int mouse_y;
     while(true) {
         //getting the time difference between each frame
         unsigned long long int current_time = SDL_GetTicks();
@@ -69,18 +82,16 @@ int main(int argc, char *argv[]) {
                 step = 1;
             }
         }
-        if(SDL_PollEvent(&event)) {
+        if(SDL_WaitEvent(&event)) {
             switch(event.type) {
                 case SDL_QUIT:
                     return 0;
                 case SDL_KEYDOWN:
+                    camera.update(event, delta, mouse_x, mouse_y);
                     switch(event.key.keysym.sym) {
                         case SDLK_ESCAPE:
                             SDL_Quit();
                             return 0;
-                        case SDLK_r:
-                            rotation_check = (!rotation_check);
-                            break;
                         case SDLK_1:
                             mesh = mesh_data[0].initialize("icosphere.obj");
                             draw_triangle = false;
@@ -109,10 +120,7 @@ int main(int argc, char *argv[]) {
                             mesh = mesh_data[6].initialize("teapot.obj");
                             draw_triangle = false;
                             break;
-                        case SDLK_t:
-                            draw_triangle = !draw_triangle;
-                            break;
-                        case SDLK_w:
+                        case SDLK_f:
                             if(draw_z_buffer == true && draw_wireframe == false) {
                                 draw_z_buffer = !draw_z_buffer;
                             }
@@ -127,63 +135,43 @@ int main(int argc, char *argv[]) {
                             break;
                     }
                     break;
-                default:
+//                default:
+//                    break;
+                case SDL_MOUSEMOTION:
+                    mouse_x = event.motion.x;
+                    mouse_y = event.motion.y;
+                    camera.update(event, delta, mouse_x, mouse_y);
+                    if(mouse_x >= display.getWidth() - 1) {
+                        SDL_WarpMouseInWindow(display.window, 0, mouse_y);
+                        //SDL_WarpMouseGlobal(0, mouse_y);
+                    }
+                    else if(mouse_x <= 1) {
+                        SDL_WarpMouseInWindow(display.window, display.getWidth() - 1, mouse_y);
+                        //SDL_WarpMouseGlobal(display.getWidth() - 1, mouse_y);
+                    }
+                    if(mouse_y >= display.getHeight() - 1) {
+                        SDL_WarpMouseInWindow(display.window, mouse_x, 0);
+                        //SDL_WarpMouseGlobal(mouse_x, 0);
+                    }
+                    else if(mouse_y <= 1) {
+                        SDL_WarpMouseInWindow(display.window, mouse_x, display.getHeight() - 1);
+                        //SDL_WarpMouseGlobal(mouse_x, display.getHeight() - 1);
+                    }
                     break;
-
             }
         }
 
         //Program Logic after this
-        //Setting up matrices for translation and rotation and the final transform
-        rot_counter += delta / 500.0;
-        //translation
-        if(mesh == &mesh_data[5]) {
-            translation.initTranslation(0, -1.5, 3.0 - (3.0 * sin(rot_counter)));
-        }
-        else if(mesh == &mesh_data[6]) {
-            translation.initTranslation(0, -0.5, 3.0 - (3.0 * sin(rot_counter)));
-        }
-        else {
-            translation.initTranslation(0, 0, 3.0 - (3.0 * sin(rot_counter)));
-        }
-        //rotation
-        if(rotation_check == true && mesh != &mesh_data[5] && mesh != &mesh_data[6]) {
-            rotation.initRotation(rot_counter, rot_counter + toRadians(180), rot_counter);
-        }
-        else {
-            if(mesh == &mesh_data[3] || mesh == &mesh_data[4]) {
-                rotation.initRotation(toRadians(75), rot_counter, 0);
-            }
-            else if(mesh == &mesh_data[2]) {
-                rotation.initRotation(toRadians(-25), rot_counter, 0);
-            }
-            else if(mesh == &mesh_data[6]) {
-                    rotation.initRotation(toRadians(0), rot_counter, toRadians(0));
-            }
-            else {
-                rotation.initRotation(0, rot_counter, 0);
-            }
-        }
-        //scaling
-        if(mesh == &mesh_data[6]) {
-            scale.initScale(1, 1, 1);
-        }
-        else {
-            scale.initScale(1, 1, 1);
-        }
-        Matrix4f transform = projection.mul(translation.mul(scale).mul(rotation));
-
         //basic display wiping
         display.render_context.clear(0);
         display.render_context.clearDepthBuffer();
 
         //mesh drawing
-        if(draw_triangle == true) {
-            display.render_context.fillTriangle(minYVert.transform(transform), midYVert.transform(transform), maxYVert.transform(transform), texture, draw_wireframe, false);
-        }
-        else {
-            display.render_context.drawMesh(*mesh, transform, texture, draw_wireframe, false);
-        }
+        Matrix4f vp = camera.getViewProjection();
+        Matrix4f temp = vp.mul(transform_mesh.getTransformation());
+        display.render_context.drawMesh(*mesh, temp, texture, draw_wireframe, false);
+        temp = vp.mul(terrain_transform.getTransformation());
+        display.render_context.drawMesh(terrainMesh, temp, texture, draw_wireframe, false);
 
         //depth map displaying
         Bitmap z_buffer = display.render_context.getNormalizedZBuffer();

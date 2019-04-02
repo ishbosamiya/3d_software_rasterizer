@@ -1,8 +1,5 @@
 #include "vector4f.h"
 
-#include <math.h>
-using namespace std;
-
 Vector4f::Vector4f()
 {
     x = 0;
@@ -67,6 +64,14 @@ Vector4f Vector4f::rotate(Vector4f axis, float angle) {
     float sin_ = (float)sin(-angle);
     float cos_ = (float)cos(-angle);
     return this->cross(axis.mul(sin_).add(this->mul(cos_).add(axis.mul(this->dot(axis.mul(1 - cos_))))));
+}
+
+Vector4f Vector4f::rotate(Quarternion rotation) {
+    Quarternion conjugate = rotation.conjugate();
+
+    Quarternion w = rotation.mul(*this).mul(conjugate);
+
+    return Vector4f(w.getX(), w.getY(), w.getZ(), 1.0);
 }
 
 //lerps the vector

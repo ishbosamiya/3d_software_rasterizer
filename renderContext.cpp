@@ -51,6 +51,41 @@ void RenderContext::drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, b
     }
 }
 
+void RenderContext::drawWire(Vertex v1, Vertex v2, int thickness, char r, char g, char b) {
+    float x1 = v1.getPosition().getX();
+    float x2 = v2.getPosition().getX();
+    float y1 = v1.getPosition().getY();
+    float y2 = v2.getPosition().getY();
+
+    //making y1 on top
+    if(y1 > y2) {
+        float temp = x1;
+        x1 = x2;
+        x2 = temp;
+        temp = y1;
+        y1 = y2;
+        y2 = temp;
+    }
+    float m = (y2 - y1)/(x2 - x1);
+    float c = x1 - (y1/m);
+
+    float prev_x = x1;
+    for(int y = y1; y <= y2; y++) {
+        float x = c + y;
+        if(prev_x > x) {
+            float temp = prev_x;
+            prev_x = x;
+            x = temp;
+        }
+        for(int i = prev_x; i <= x; i++) {
+            int m_x = ceil(i);
+            if(m_x >= 0 && m_x < getWidth() && y >= 0 && y < getHeight()) {
+                drawPixel(m_x, y, r, g, b);
+            }
+        }
+    }
+}
+
 bool RenderContext::clipPolygonAxis(vector<Vertex> &vertices, vector<Vertex> &auxillary_vector, int component_index) {
     clipPolygonComponent(vertices, component_index, 1.0, auxillary_vector);
     vertices.clear();

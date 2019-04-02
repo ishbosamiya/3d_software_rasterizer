@@ -3,7 +3,7 @@
 
 #include "vector4f.h"
 
-
+class Vector4f;
 class Matrix4f
 {
     float **m;
@@ -11,6 +11,8 @@ class Matrix4f
     public:
         Matrix4f();
         Matrix4f(const Matrix4f &obj);
+        void operator=(const Matrix4f &obj);
+
         void initIdentity();
         void initScreenSpaceTransform(float halfWidth, float halfHeight);
         void initTranslation(float x, float y, float z);
@@ -27,6 +29,7 @@ class Matrix4f
         float get(int x, int y);
         void setM(float **m);
         void set(int x, int y, float value);
+        void print();
         ~Matrix4f();
 
     protected:

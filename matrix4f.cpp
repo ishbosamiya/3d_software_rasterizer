@@ -8,6 +8,7 @@ Matrix4f::Matrix4f()
     for(int i = 0; i < 4; i++) {
         m[i] = new float[4];
     }
+    initIdentity();
 }
 
 Matrix4f::Matrix4f(const Matrix4f &obj) {
@@ -17,6 +18,14 @@ Matrix4f::Matrix4f(const Matrix4f &obj) {
     for(int i = 0; i < 4; i++) {
         m[i] = new float[4];
     }
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            m[i][j] = obj.m[i][j];
+        }
+    }
+}
+
+void Matrix4f::operator=(const Matrix4f &obj) {
     for(int i = 0; i < 4; i++) {
         for(int j = 0; j < 4; j++) {
             m[i][j] = obj.m[i][j];
@@ -134,6 +143,7 @@ Matrix4f Matrix4f::initRotation(Vector4f forward, Vector4f up, Vector4f right) {
     m[1][0] = u.getX();	m[1][1] = u.getY();	m[1][2] = u.getZ();	m[1][3] = 0;
     m[2][0] = f.getX();	m[2][1] = f.getY();	m[2][2] = f.getZ();	m[2][3] = 0;
     m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
+    return *this;
 }
 
 Vector4f Matrix4f::transform(Vector4f r) {
@@ -167,6 +177,15 @@ void Matrix4f::setM(float **m) {
 
 void Matrix4f::set(int x, int y, float value) {
     m[x][y] = value;
+}
+
+void Matrix4f::print() {
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            cout << m[i][j] << " ";
+        }
+        cout << endl;
+    }
 }
 
 Matrix4f::~Matrix4f()
