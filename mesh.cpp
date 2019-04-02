@@ -26,7 +26,7 @@ Mesh::Mesh(char *file_name)
             addElement(m_vertices, Vertex(getElement(model.getPositions(), i), getElement(model.getTexCoords(), i)));
         }
 
-        m_indices = model.getIndices();
+        equateListToVector(m_indices, model.getIndices());
         writeMeshToFile();
         is_initialized = true;
     }
@@ -44,7 +44,7 @@ Mesh::Mesh(char *file_name)
                 addElement(m_vertices, Vertex(getElement(model.getPositions(), i), getElement(model.getTexCoords(), i)));
             }
 
-            m_indices = model.getIndices();
+            equateListToVector(m_indices, model.getIndices());
             writeMeshToFile();
             is_initialized = true;
         }
@@ -113,16 +113,23 @@ bool Mesh::readMeshFromFile() {
     return true;
 }
 
-void Mesh::addElement(list<Vertex> &m_list, Vertex data) {
-    list<Vertex>::iterator it;
+void Mesh::addElement(vector<Vertex> &m_list, Vertex data) {
+    vector<Vertex>::iterator it;
     it = m_list.end();
     m_list.insert(it, data);
 }
 
-void Mesh::addElement(list<int> &m_list, int data) {
-    list<int>::iterator it;
+void Mesh::addElement(vector<int> &m_list, int data) {
+    vector<int>::iterator it;
     it = m_list.end();
     m_list.insert(it, data);
+}
+
+Vector4f Mesh::getElement(vector<Vector4f> &m_list, int index) {
+    vector<Vector4f>::iterator it;
+    it = m_list.begin();
+    advance(it, index);
+    return *it;
 }
 
 Vector4f Mesh::getElement(list<Vector4f> &m_list, int index) {
@@ -132,8 +139,15 @@ Vector4f Mesh::getElement(list<Vector4f> &m_list, int index) {
     return *it;
 }
 
-Vertex Mesh::getElement(list<Vertex> &m_list, int index) {
-    list<Vertex>::iterator it;
+Vertex Mesh::getElement(vector<Vertex> &m_list, int index) {
+    vector<Vertex>::iterator it;
+    it = m_list.begin();
+    advance(it, index);
+    return *it;
+}
+
+int Mesh::getElement(vector<int> &m_list, int index) {
+    vector<int>::iterator it;
     it = m_list.begin();
     advance(it, index);
     return *it;
@@ -144,6 +158,13 @@ int Mesh::getElement(list<int> &m_list, int index) {
     it = m_list.begin();
     advance(it, index);
     return *it;
+}
+
+void Mesh::equateListToVector(vector<int> &m_vector, list<int> &m_list) {
+    for(int i = 0; i < m_list.size(); i++) {
+        int data = getElement(m_list, i);
+        m_vector.push_back(data);
+    }
 }
 
 Mesh::~Mesh()

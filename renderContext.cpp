@@ -6,8 +6,7 @@ RenderContext::RenderContext() {
     //ctor
 }
 
-RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels): Bitmap(width, height, channels)
-{
+RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels): Bitmap(width, height, channels) {
     m_z_buffer = new float[width*height];
 }
 
@@ -19,8 +18,7 @@ void RenderContext::clearDepthBuffer() {
 
 //same as the overloaded constructor
 void RenderContext::initialize(unsigned int width, unsigned int height, unsigned int channels) {
-    Bitmap::initialize(width, height, channels);
-    m_z_buffer = new float[width*height];
+    *this = RenderContext(width, height, channels);
 }
 
 void RenderContext::drawMesh(Mesh mesh, Matrix4f transform, Bitmap texture, bool wireframe, bool back_face_culling) {
@@ -32,37 +30,13 @@ void RenderContext::drawMesh(Mesh mesh, Matrix4f transform, Bitmap texture, bool
     }
 }
 
-void RenderContext::drawZBuffer() {
-    float min = std::numeric_limits<float>::max();
-    float max = std::numeric_limits<float>::min();
-    float temp_max = std::numeric_limits<float>::max();
-    for(int i = 0; i < m_width*m_height; i++) {
-        if(min > m_z_buffer[i]) {
-            min = m_z_buffer[i];
-        }
-        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
-            max = m_z_buffer[i];
-        }
+//while needing to render the triangles with wireframe around them
+void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe, bool back_face_culling) {
+    if(wireframe == true) {
+        fillWireframe(v1, v2, v3, 255, 170, 64, 1, back_face_culling);
     }
-    max += 0.001;
-    //std::cout << "Min: " << min << std::endl;
-    for(int i = 0; i < m_width; i++) {
-        for(int j = 0; j < m_height; j++) {
-            float value = m_z_buffer[i + j*m_width];
-            float relative = 0;
-            if(max != min && value != temp_max) {
-                relative = (1.0 - ((value - min)/(max - min)));
-            }
-            if(value == temp_max) {
-                relative = 0;
-            }
-//            if(value <= max) {
-//                //std::cout << "m_z_buffer: " << " x: " << i << " y: " << j << " value: " << value << std::endl;
-//                //std::cout << "m_z_buffer: " << " x: " << i << " y: " << j << " relative: " << relative << std::endl;
-//            }
-            char colour = relative * 255;
-            drawPixel(i, j, colour, colour, colour);
-        }
+    else {
+        fillTriangle(v1, v2, v3, texture, back_face_culling);
     }
 }
 
@@ -183,12 +157,6 @@ void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, i
     float depth = left.getDepth() + depth_x_step * x_pre_step;
 
     for(int i = x_min; i < x_max; i++) {
-//        char r = (char)(color.getX() * 255.0 + 0.5);
-//        char g = (char)(color.getY() * 255.0 + 0.5);
-//        char b = (char)(color.getZ() * 255.0 + 0.5);
-//
-//        drawPixel(i, j, r, g, b);
-
         int index = i + j * getWidth();
         if(depth < m_z_buffer[index]) {
             m_z_buffer[index] = depth;
@@ -251,17 +219,12 @@ void RenderContext::fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char 
 }
 
 void RenderContext::drawWire(Edge edge, int thickness, char r, char g, char b) {
-//    for getting a certain thickness to each of the pixel points of the line
-//    for(int j = 0; j < thickness; j++) {
-//        for(int k = 0; k < thickness; k++) {
-//            drawPixel(x + j, y_start + k, r, g, b);
-//        }
-//    }
-
     //prev_x as a buffer to be able to complete the line
     int y_start = edge.getYStart();
     int y_end = edge.getYEnd();
     int prev_x = ceil(edge.getXStart());
+
+    char m_r, m_g, m_b;
 
     //when the line is horizontal, it needs a special case due to the way edge step() works
     if(y_start == y_end) {
@@ -299,7 +262,6 @@ void RenderContext::drawWire(Edge edge, int thickness, char r, char g, char b) {
                         drawPixel(x + j, i + k, r, g, b);
                     }
                 }
-                //drawPixel(curr_x + j, i + k, r, g, b);
             }
         }
         prev_x = ceil(edge.getX());
@@ -324,14 +286,66 @@ void RenderContext::drawWire(Edge edge, int thickness, char r, char g, char b) {
     }
 }
 
-//while needing to render the triangles with wireframe around them
-void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture, bool wireframe, bool back_face_culling) {
-    if(wireframe == true) {
-        fillWireframe(v1, v2, v3, 100, 100, 100, 2, back_face_culling);
+void RenderContext::drawZBuffer() {
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::min();
+    float temp_max = std::numeric_limits<float>::max();
+    for(int i = 0; i < m_width*m_height; i++) {
+        if(min > m_z_buffer[i]) {
+            min = m_z_buffer[i];
+        }
+        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
+            max = m_z_buffer[i];
+        }
     }
-    else {
-        fillTriangle(v1, v2, v3, texture, back_face_culling);
+    max += 0.001;
+    //std::cout << "Min: " << min << std::endl;
+    for(int i = 0; i < m_width; i++) {
+        for(int j = 0; j < m_height; j++) {
+            float value = m_z_buffer[i + j*m_width];
+            float relative = 0;
+            if(max != min && value != temp_max) {
+                relative = (1.0 - ((value - min)/(max - min)));
+            }
+            if(value == temp_max) {
+                relative = 0;
+            }
+            char colour = relative * 255;
+            drawPixel(i, j, colour, colour, colour);
+        }
     }
+}
+
+RenderContext RenderContext::getNormalizedZBuffer() {
+    RenderContext result(m_width, m_height, m_channels);
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::min();
+    float temp_max = std::numeric_limits<float>::max();
+    for(int i = 0; i < m_width*m_height; i++) {
+        if(min > m_z_buffer[i]) {
+            min = m_z_buffer[i];
+        }
+        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
+            max = m_z_buffer[i];
+        }
+    }
+    max += 0.001;
+    //std::cout << "Min: " << min << std::endl;
+    for(int i = 0; i < m_width; i++) {
+        for(int j = 0; j < m_height; j++) {
+            float value = m_z_buffer[i + j*m_width];
+            float relative = 0;
+            if(max != min && value != temp_max) {
+                relative = (1.0 - ((value - min)/(max - min)));
+            }
+            if(value == temp_max) {
+                relative = 0;
+            }
+            char colour = relative * 255;
+            result.drawPixel(i, j, colour, colour, colour);
+        }
+    }
+    return result;
 }
 
 RenderContext RenderContext::getResizedRenderContext(int width, int height) {
@@ -346,7 +360,6 @@ RenderContext RenderContext::getResizedRenderContext(int width, int height) {
     return image;
 }
 
-RenderContext::~RenderContext()
-{
-    //dtor
+RenderContext::~RenderContext() {
+    //delete m_z_buffer;
 }

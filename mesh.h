@@ -2,6 +2,7 @@
 #define MESH_H
 
 #include <list>
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -12,17 +13,21 @@
 
 class Mesh
 {
-    list<Vertex> m_vertices;
-    list<int> m_indices;
+    vector<Vertex> m_vertices;
+    vector<int> m_indices;
     bool is_initialized;
     char *m_file_name;
 
-    void addElement(list<Vertex> &m_list, Vertex data);
-    void addElement(list<int> &m_list, int data);
+    void addElement(vector<Vertex> &m_list, Vertex data);
+    void addElement(vector<int> &m_list, int data);
 
     Vector4f getElement(list<Vector4f> &m_list, int index);
-    Vertex getElement(list<Vertex> &m_list, int index);
     int getElement(list<int> &m_list, int index);
+    void equateListToVector(vector<int> &m_vector, list<int> &m_list);
+
+    Vector4f getElement(vector<Vector4f> &m_list, int index);
+    Vertex getElement(vector<Vertex> &m_list, int index);
+    int getElement(vector<int> &m_list, int index);
 
     bool readMeshFromFile();
     bool writeMeshToFile();

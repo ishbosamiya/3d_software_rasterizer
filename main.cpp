@@ -19,15 +19,16 @@ int main(int argc, char *argv[]) {
     int step = 1;
     float average_fps = 0;
     //creating the display and updating it
+    Display z_buffer_display("z Buffer", width/5, height/5, 0, 0);
     Display display("Software Rendering", width, height);
 
-    Display z_buffer_display("z Buffer", 1280/5, 720/5, 0, 0);
+    RenderContext z_buffer;
 
     Bitmap texture(32, 32, 3);
     texture.generateNoise();
 
     Mesh *mesh;
-    Mesh mesh_data[6];
+    Mesh mesh_data[7];
     //mesh_data[0].initialize("icosphere.obj");
 
     mesh = &mesh_data[0];
@@ -47,6 +48,10 @@ int main(int argc, char *argv[]) {
     //setting up perspective
     Matrix4f projection;
     projection.initPerspective(toRadians(70.0), (float)display.render_context.getWidth()/(float)display.render_context.getHeight(), 0.1, 1000.0);
+    Matrix4f translation;
+    Matrix4f rotation;
+    Matrix4f scale;
+    Matrix4f transform;
 
     //test code for rotation of triangle
     bool rotation_check = false;
@@ -122,13 +127,26 @@ int main(int argc, char *argv[]) {
                             mesh = &mesh_data[5];
                             draw_triangle = false;
                             break;
+                        case SDLK_7:
+                            if(mesh_data[6].isInitialized() == false) {
+                                mesh_data[6].initialize("teapot.obj");
+                            }
+                            mesh = &mesh_data[6];
+                            draw_triangle = false;
+                            break;
                         case SDLK_t:
                             draw_triangle = !draw_triangle;
                             break;
                         case SDLK_w:
+                            if(draw_z_buffer == true && draw_wireframe == false) {
+                                draw_z_buffer = !draw_z_buffer;
+                            }
                             draw_wireframe = !draw_wireframe;
                             break;
                         case SDLK_z:
+                            if(draw_wireframe == true && draw_z_buffer == false) {
+                                draw_wireframe = !draw_wireframe;
+                            }
                             draw_z_buffer = !draw_z_buffer;
                         default:
                             break;
@@ -143,51 +161,64 @@ int main(int argc, char *argv[]) {
         //Program Logic after this
         //Setting up matrices for translation and rotation and the final transform
         rot_counter += delta / 500.0;
-        Matrix4f translation;
+        //translation
         if(mesh == &mesh_data[5]) {
-            translation.initTranslation(0, -1, 3.0);
+            translation.initTranslation(0, -1.5, 3.0);
+        }
+        else if(mesh == &mesh_data[6]) {
+            translation.initTranslation(0, -0.5, 3.0);
         }
         else {
             translation.initTranslation(0, 0, 3.0);
         }
-        Matrix4f rotation;
-        if(rotation_check == true) {
-            rotation.initRotation(rot_counter, rot_counter + 90.0, rot_counter);
+        //rotation
+        if(rotation_check == true && mesh != &mesh_data[5] && mesh != &mesh_data[6]) {
+            rotation.initRotation(rot_counter, rot_counter + toRadians(180), rot_counter);
         }
         else {
             if(mesh == &mesh_data[3] || mesh == &mesh_data[4]) {
                 rotation.initRotation(toRadians(75), rot_counter, 0);
             }
+            else if(mesh == &mesh_data[2]) {
+                rotation.initRotation(toRadians(-25), rot_counter, 0);
+            }
+            else if(mesh == &mesh_data[6]) {
+                    rotation.initRotation(toRadians(0), rot_counter, toRadians(0));
+            }
             else {
                 rotation.initRotation(0, rot_counter, 0);
             }
         }
-        Matrix4f scale;
-        scale.initScale(1, 1, 1);
-        Matrix4f transform_ = projection.mul(translation.mul(scale).mul(rotation));
+        //scaling
+        if(mesh == &mesh_data[6]) {
+            scale.initScale(1, 1, 1);
+        }
+        else {
+            scale.initScale(1, 1, 1);
+        }
+        transform = projection.mul(translation.mul(scale).mul(rotation));
 
+        //basic display wiping
         display.render_context.clear(0);
         display.render_context.clearDepthBuffer();
 
-        //display.render_context.fillWireframe(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), 255, 0, 0, 2);
+        //mesh drawing
         if(draw_triangle == true) {
-          display.render_context.fillTriangle(minYVert.transform(transform_), midYVert.transform(transform_), maxYVert.transform(transform_), texture, draw_wireframe, false);
+          display.render_context.fillTriangle(minYVert.transform(transform), midYVert.transform(transform), maxYVert.transform(transform), texture, draw_wireframe, false);
         }
         else {
-            display.render_context.drawMesh(*mesh, transform_, texture, draw_wireframe, false);
+            display.render_context.drawMesh(*mesh, transform, texture, draw_wireframe, false);
         }
 
+        //depth map displaying
+        z_buffer = display.render_context.getNormalizedZBuffer();
         if(draw_z_buffer == true) {
-            display.render_context.drawZBuffer();
+            display.renderImage(z_buffer);
         }
-
-        display.renderImage();
-
-        if(draw_z_buffer == false) {
-            display.render_context.drawZBuffer();
+        else {
+            display.renderImage();
         }
-        RenderContext temp = display.getRenderContext().getResizedRenderContext(z_buffer_display.getWidth(), z_buffer_display.getHeight());
-        z_buffer_display.renderImage(temp);
+        z_buffer_display.renderImage(z_buffer.getResizedRenderContext(z_buffer_display.getWidth(), z_buffer_display.getHeight()));
 
         //updating the window
         SDL_UpdateWindowSurface(display.window);

@@ -87,23 +87,6 @@ OBJModel::OBJModel(char *file_name)
                 addElement(m_indices, index[i]);
             }
             no_of_triangles += no_of_vertices - 2;
-//            OBJIndex index[3];
-//            char info[50];
-//            fin >> info;
-//            char **result = getSplit(info, '/');
-//            addIndices(index[0], result);
-//            fin >> info;
-//            result = getSplit(info, '/');
-//            addIndices(index[1], result);
-//            fin >> info;
-//            result = getSplit(info, '/');
-//            addIndices(index[2], result);
-//            //storing the indices in contiguous manner
-//            addElement(m_indices, index[0]);
-//            addElement(m_indices, index[1]);
-//            addElement(m_indices, index[2]);
-//            //cout << endl;
-//            delete result;
         }
         else {
             char temp[100];
@@ -111,9 +94,6 @@ OBJModel::OBJModel(char *file_name)
             //cout << temp << endl;
         }
     }
-//    m_indices.pop_back();
-//    m_indices.pop_back();
-//    m_indices.pop_back();
     cout << file_name << " created with " << no_of_triangles << " triangles" << endl;
     has_loaded = true;
 }
@@ -261,9 +241,15 @@ IndexedModel OBJModel::toIndexedModel() {
             int m_texCoords_index = getElement(m_indices, i).getTexCoordsIndex();
             addElement(result.getTexCoords(), getElement(m_texCoords, m_texCoords_index));
         }
+        else {
+            addElement(result.getTexCoords(), Vector4f(0, 0, 0, 0));
+        }
         if(m_has_normals == true) {
             int m_normals_index = getElement(m_indices, i).getNormalsIndex();
             addElement(result.getNormals(), getElement(m_normals, m_normals_index));
+        }
+        else {
+            addElement(result.getNormals(), Vector4f(0, 0, 0, 0));
         }
         addElement(result.getIndices(), i);
 

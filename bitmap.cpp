@@ -102,6 +102,13 @@ void Bitmap::copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src)
     m_components[destIndex + 2] = src.getComponent(srcIndex + 2);
 }
 
+void Bitmap::getPixel(int x, int y, char &r, char &g, char &b) {
+    int index = (x + y * m_width) * m_channels;
+    r = m_components[index + 0];
+    g = m_components[index + 1];
+    b = m_components[index + 2];
+}
+
 void Bitmap::generateNoise() {
     //adding random r, g, b values to each pixel
     srand(10);
@@ -114,4 +121,5 @@ void Bitmap::generateNoise() {
 
 Bitmap::~Bitmap() {
     //delete m_components;
+    //delete m_image_surface;
 }

@@ -26,6 +26,8 @@ class Bitmap
         //for drawing pixel from a defined texture map
         void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src);
 
+        void getPixel(int x, int y, char &r, char &g, char &b);
+
         char getComponent(int index) { return m_components[index];}
 
         Uint32 getPixel32( SDL_Surface *surface, int x, int y );
