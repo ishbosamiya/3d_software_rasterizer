@@ -5,8 +5,9 @@ Vertex::Vertex(float x, float y, float z)
     m_pos = Vector4f(x ,y, z, 1);
 }
 
-Vertex::Vertex(Vector4f pos) {
+Vertex::Vertex(Vector4f pos, Vector4f color) {
     m_pos = pos;
+    m_color = color;
 }
 
 //Cross product of the vectors formed by current vertex, b and c
@@ -23,12 +24,13 @@ float Vertex::triangleArea(Vertex b, Vertex c) {
 
 //to perform a matrix transform to the vertex
 Vertex Vertex::transform(Matrix4f transform_) {
-    return Vertex(transform_.transform(m_pos));
+    return Vertex(transform_.transform(m_pos), m_color);
 }
 
 //To add perspective to the vertex
 Vertex Vertex::perspectiveDivide() {
-    return Vertex(Vector4f(m_pos.getX()/m_pos.getW(), m_pos.getY()/m_pos.getW(), m_pos.getZ()/m_pos.getW(), m_pos.getW()));
+    return Vertex(Vector4f(m_pos.getX()/m_pos.getW(), m_pos.getY()/m_pos.getW(), m_pos.getZ()/m_pos.getW(), m_pos.getW())
+                  , m_color);
 }
 
 Vertex::~Vertex()

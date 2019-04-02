@@ -10,68 +10,11 @@ RenderContext::RenderContext() {
 
 RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels): Bitmap(width, height, channels)
 {
-    //For the fill concave shape algorithm to work, it needs a start starting x coordinate and the ending x coordinate for all the y coordinates of the image
-    m_scan_buffer = new int[height * 2];
 }
 
 //same as the overloaded constructor
 void RenderContext::initialize(unsigned int width, unsigned int height, unsigned int channels) {
     Bitmap::initialize(width, height, channels);
-    m_scan_buffer = new int[height * 2];
-}
-
-//to add the starting x coordinate and the ending y coordinate to the respective y coordinate
-void RenderContext::drawScanBuffer(int yCoord, int xMin, int xMax) {
-    m_scan_buffer[yCoord * 2] = xMin;
-    m_scan_buffer[yCoord * 2 + 1] = xMax;
-}
-
-//running across the given y coordinate of pixels to draw the shape
-void RenderContext::fillShape(int yMin, int yMax) {
-    for(int i = yMin; i < yMax; i++) {
-        int xMin = m_scan_buffer[i * 2];
-        int xMax = m_scan_buffer[i * 2 + 1];
-
-        //moving across the x axis and drawing those particular pixels
-        for(int j = xMin; j < xMax; j++) {
-            drawPixel(j, i, 255, 255, 255);
-        }
-    }
-}
-
-//converting the the given vertices into a line for the algorithm to use
-void RenderContext::scanConvertLine(Vertex minYVert, Vertex maxYVert, int whichSide) {
-    //getting the starting and x and y coordinates for the line
-    int y_start = (int)ceil(minYVert.getY());
-    int y_end = (int)ceil(maxYVert.getY());
-    int x_start = (int)ceil(minYVert.getX());
-    int x_end = (int)ceil(maxYVert.getX());
-
-    //getting the x axis and y axis distance between the 2 vertices
-    float y_dist = maxYVert.getY() - minYVert.getY();
-    float x_dist = maxYVert.getX() - minYVert.getX();
-
-    if(y_dist <= 0) {
-        return;
-    }
-
-    //having a step to move along the x axis as the y coordinate changes
-    float x_step = (float)x_dist/(float)y_dist;
-    float y_prestep = y_start - minYVert.getY();
-    float cur_x = minYVert.getX() + y_prestep * x_step;
-
-    //adding the starting and ending x coordinate for entire y axis (starting at y_start, ending at y_end)
-    for(int i = y_start; i < y_end; i++) {
-        m_scan_buffer[i * 2 + whichSide] = (int)ceil(cur_x);
-        cur_x += x_step;
-    }
-}
-
-//to convert the given 3 vertices in order into the algorithm ready scan buffer
-void RenderContext::scanConvertTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVert, int handedness) {
-    scanConvertLine(minYVert, maxYVert, 0 + handedness);
-    scanConvertLine(minYVert, midYVert, 1 - handedness);
-    scanConvertLine(midYVert, maxYVert, 1 - handedness);
 }
 
 //creating a global triangle generation function that works with any ordering of the vertices
@@ -114,23 +57,21 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3) {
 
     //rendering the triangle without using memory buffers
     scanTriangle(minYVert, midYVert, maxYVert, handedness);
-    //Old Implementation
-    //Creating the triangle
-    //scanConvertTriangle(minYVert, midYVert, maxYVert, handedness);
-    //fillShape((int)ceil(minYVert.getY()), (int)ceil(maxYVert.getY()));
 }
 
 void RenderContext::scanTriangle(Vertex minYVert, Vertex midYVert, Vertex maxYVert, bool handedness) {
-    Edge top_to_bottom(minYVert, maxYVert);
-    Edge top_to_middle(minYVert, midYVert);
-    Edge middle_to_bottom(midYVert, maxYVert);
+    Gradients gradients(minYVert, midYVert, maxYVert);
 
-    scanEdges(top_to_bottom, top_to_middle, handedness);
-    scanEdges(top_to_bottom, middle_to_bottom, handedness);
+    Edge top_to_bottom(gradients, minYVert, maxYVert, 0);
+    Edge top_to_middle(gradients, minYVert, midYVert, 0);
+    Edge middle_to_bottom(gradients, midYVert, maxYVert, 1);
+
+    scanEdges(gradients, top_to_bottom, top_to_middle, handedness);
+    scanEdges(gradients, top_to_bottom, middle_to_bottom, handedness);
 }
 
 //getting information for (horizontal) lines from edge to edge
-void RenderContext::scanEdges(Edge &a, Edge &b, bool handedness) {
+void RenderContext::scanEdges(Gradients gradients, Edge &a, Edge &b, bool handedness) {
     //making sure that the left and right edges are on their correct sides
     Edge left = a;
     Edge right = b;
@@ -160,19 +101,36 @@ void RenderContext::scanEdges(Edge &a, Edge &b, bool handedness) {
 
     //sending data to render the horizontal line
     for(int i = y_start; i < y_end; i++) {
-        drawScanLine(left, right, i);
+        drawScanLine(gradients, left, right, i);
         left.step();
         right.step();
     }
 }
 
-void RenderContext::drawScanLine(Edge &left, Edge &right, int j) {
+void RenderContext::drawScanLine(Gradients gradients, Edge &left, Edge &right, int j) {
     //basic sweep render of all the pixels between the starting x coordinate and the ending x coordinate
     int x_min = ceil(left.getX());
     int x_max = ceil(right.getX());
 
+    //for correct colors based on the position, otherwise there is a difference between the actual x and the ceil(x) which causes the colors to be slightly off
+    float x_pre_step = x_min - left.getX();
+
+    Vector4f min_color = left.getColor().add(gradients.getColorXStep().mul(x_pre_step));
+    Vector4f max_color = right.getColor().add(gradients.getColorXStep().mul(x_pre_step));
+
+
+    float lerp_amt = 0.0;
+    float lerp_step = 1.0 / (float)(x_max - x_min);
+
     for(int i = x_min; i < x_max; i++) {
-        drawPixel(i, j, 255, 255, 255);
+        Vector4f color = min_color.lerp(max_color, lerp_amt);
+
+        char r = (char)(color.getX() * 255.0 + 0.5);
+        char g = (char)(color.getY() * 255.0 + 0.5);
+        char b = (char)(color.getZ() * 255.0 + 0.5);
+
+        drawPixel(i, j, r, g, b);
+        lerp_amt += lerp_step;
     }
 }
 
@@ -201,10 +159,12 @@ void RenderContext::fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char 
         midYVert = temp;
     }
 
+    Gradients gradients(minYVert, midYVert, maxYVert);
+
     //creating all the edges
-    Edge top_to_bottom(minYVert, maxYVert);
-    Edge top_to_middle(minYVert, midYVert);
-    Edge middle_to_bottom(midYVert, maxYVert);
+    Edge top_to_bottom(gradients, minYVert, maxYVert, 0);
+    Edge top_to_middle(gradients, minYVert, midYVert, 0);
+    Edge middle_to_bottom(gradients, midYVert, maxYVert, 1);
 
     //drawing all the edges
     drawWire(top_to_bottom, thickness, r, g, b);
