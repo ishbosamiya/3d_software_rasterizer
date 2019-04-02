@@ -13,17 +13,21 @@ float toRadians(float angle) {
 }
 
 int main(int argc, char *argv[]) {
+    const int width = 1280;
+    const int height = 720;
     //for fps counter
     int step = 1;
     float average_fps = 0;
     //creating the display and updating it
-    Display display("Software Rendering", 1280, 720);
+    Display display("Software Rendering", width, height);
+
+    Display z_buffer_display("z Buffer", 1280/5, 720/5, 0, 0);
 
     Bitmap texture(32, 32, 3);
     texture.generateNoise();
 
     Mesh *mesh;
-    Mesh mesh_data[5];
+    Mesh mesh_data[6];
     //mesh_data[0].initialize("icosphere.obj");
 
     mesh = &mesh_data[0];
@@ -79,7 +83,6 @@ int main(int argc, char *argv[]) {
                         case SDLK_1:
                             if(mesh_data[0].isInitialized() == false) {
                                 mesh_data[0].initialize("icosphere.obj");
-                                cout << "icosphere.obj loaded" << endl;
                             }
                             mesh = &mesh_data[0];
                             draw_triangle = false;
@@ -87,7 +90,6 @@ int main(int argc, char *argv[]) {
                         case SDLK_2:
                             if(mesh_data[1].isInitialized() == false) {
                                 mesh_data[1].initialize("sphere_high.obj");
-                                cout << "sphere_high.obj loaded" << endl;
                             }
                             mesh = &mesh_data[1];
                             draw_triangle = false;
@@ -95,7 +97,6 @@ int main(int argc, char *argv[]) {
                         case SDLK_3:
                             if(mesh_data[2].isInitialized() == false) {
                                 mesh_data[2].initialize("monkey0.obj");
-                                cout << "monkey0.obj loaded" << endl;
                             }
                             mesh = &mesh_data[2];
                             draw_triangle = false;
@@ -103,7 +104,6 @@ int main(int argc, char *argv[]) {
                         case SDLK_4:
                             if(mesh_data[3].isInitialized() == false) {
                                 mesh_data[3].initialize("cylinder.obj");
-                                cout << "cylinder.obj loaded" << endl;
                             }
                             mesh = &mesh_data[3];
                             draw_triangle = false;
@@ -111,9 +111,15 @@ int main(int argc, char *argv[]) {
                         case SDLK_5:
                             if(mesh_data[4].isInitialized() == false) {
                                 mesh_data[4].initialize("cylinder_hollow.obj");
-                                cout << "cylinder_hollow.obj loaded" << endl;
                             }
                             mesh = &mesh_data[4];
+                            draw_triangle = false;
+                            break;
+                        case SDLK_6:
+                            if(mesh_data[5].isInitialized() == false) {
+                                mesh_data[5].initialize("man.obj");
+                            }
+                            mesh = &mesh_data[5];
                             draw_triangle = false;
                             break;
                         case SDLK_t:
@@ -138,15 +144,27 @@ int main(int argc, char *argv[]) {
         //Setting up matrices for translation and rotation and the final transform
         rot_counter += delta / 500.0;
         Matrix4f translation;
-        translation.initTranslation(0, 0, 3.0);
+        if(mesh == &mesh_data[5]) {
+            translation.initTranslation(0, -1, 3.0);
+        }
+        else {
+            translation.initTranslation(0, 0, 3.0);
+        }
         Matrix4f rotation;
         if(rotation_check == true) {
             rotation.initRotation(rot_counter, rot_counter + 90.0, rot_counter);
         }
         else {
-            rotation.initRotation(0, rot_counter, 0);
+            if(mesh == &mesh_data[3] || mesh == &mesh_data[4]) {
+                rotation.initRotation(toRadians(75), rot_counter, 0);
+            }
+            else {
+                rotation.initRotation(0, rot_counter, 0);
+            }
         }
-        Matrix4f transform_ = projection.mul(translation.mul(rotation));
+        Matrix4f scale;
+        scale.initScale(1, 1, 1);
+        Matrix4f transform_ = projection.mul(translation.mul(scale).mul(rotation));
 
         display.render_context.clear(0);
         display.render_context.clearDepthBuffer();
@@ -162,10 +180,18 @@ int main(int argc, char *argv[]) {
         if(draw_z_buffer == true) {
             display.render_context.drawZBuffer();
         }
+
         display.renderImage();
+
+        if(draw_z_buffer == false) {
+            display.render_context.drawZBuffer();
+        }
+        RenderContext temp = display.getRenderContext().getResizedRenderContext(z_buffer_display.getWidth(), z_buffer_display.getHeight());
+        z_buffer_display.renderImage(temp);
 
         //updating the window
         SDL_UpdateWindowSurface(display.window);
+        SDL_UpdateWindowSurface(z_buffer_display.window);
         //SDL_Delay(10);
         step++;
     }

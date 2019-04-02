@@ -45,6 +45,7 @@ class OBJModel
     bool m_has_normals;
     bool m_has_texCoords;
     int no_of_triangles;
+    bool has_loaded;
 
     list<Vector4f> m_positions;
     list<Vector4f> m_texCoords;
@@ -70,6 +71,8 @@ class OBJModel
 
         IndexedModel toIndexedModel();
         void printALL();
+
+        bool hasLoaded() { return has_loaded;}
 
         virtual ~OBJModel();
 

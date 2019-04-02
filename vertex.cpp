@@ -1,5 +1,9 @@
 #include "vertex.h"
 
+Vertex::Vertex() {
+    m_pos = Vector4f(0, 0, 0, 0);
+}
+
 Vertex::Vertex(float x, float y, float z)
 {
     m_pos = Vector4f(x ,y, z, 1);

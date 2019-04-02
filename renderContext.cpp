@@ -334,6 +334,18 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap texture
     }
 }
 
+RenderContext RenderContext::getResizedRenderContext(int width, int height) {
+    RenderContext image(width, height, 3);
+    for(int x = 0; x < width; x++) {
+        for(int y = 0; y < height; y++) {
+            int source_x = x * getWidth() / width;
+            int source_y = y * getHeight() / height;
+            image.copyPixel(x, y, source_x, source_y, *this);
+        }
+    }
+    return image;
+}
+
 RenderContext::~RenderContext()
 {
     //dtor

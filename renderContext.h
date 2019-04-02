@@ -32,6 +32,9 @@ class RenderContext: public Bitmap
 
         void clearDepthBuffer();
         void drawZBuffer();
+
+        RenderContext getResizedRenderContext(int width, int height);
+
         ~RenderContext();
 
     protected:

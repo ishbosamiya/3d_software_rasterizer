@@ -1,9 +1,10 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <SDL.h>
-#include <SDL_Image.h>
+#include <limits>
 #include <iostream>
+
+#include "SDL.h"
 
 using namespace std;
 
@@ -26,6 +27,8 @@ class Bitmap
         void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap src);
 
         char getComponent(int index) { return m_components[index];}
+
+        Uint32 getPixel32( SDL_Surface *surface, int x, int y );
 
         int getWidth() {
             return m_width;

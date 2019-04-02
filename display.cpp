@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-Display::Display(char *title, unsigned int width, unsigned int height) {
+Display::Display(char *title, unsigned int width, unsigned int height, int position_x, int position_y) {
     //basic assignment of values
     strcpy(this->title, title);
     this->width = width;
@@ -18,7 +18,13 @@ Display::Display(char *title, unsigned int width, unsigned int height) {
     }
 
     //creating the window
-    window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+    if(position_x == -1) {
+        position_x = SDL_WINDOWPOS_CENTERED;
+    }
+    if(position_y == -1) {
+        position_y = SDL_WINDOWPOS_CENTERED;
+    }
+    window = SDL_CreateWindow(title, position_x, position_y, width, height, SDL_WINDOW_SHOWN);
     if(window == NULL) {
         cout << "Failed to create window!!! " << SDL_GetError() << endl;
         return;
@@ -70,6 +76,10 @@ void Display::updateWindow() {
 
 void Display::renderImage(){
     SDL_BlitSurface(render_context.getSurface(), NULL, screenSurface, NULL);
+}
+
+void Display::renderImage(RenderContext image){
+    SDL_BlitSurface(image.getSurface(), NULL, screenSurface, NULL);
 }
 
 Display::~Display() {

@@ -10,9 +10,9 @@ OBJModel::OBJModel(char *file_name)
     fin.open(file_name);
     if(!fin) {
         cout << "OBJ file did not open!!!" << endl;
+        has_loaded = false;
         return;
     }
-
     char type[3];
     while(!fin.eof()) {
         fin >> type;
@@ -114,7 +114,8 @@ OBJModel::OBJModel(char *file_name)
 //    m_indices.pop_back();
 //    m_indices.pop_back();
 //    m_indices.pop_back();
-    cout << "objmodel created with " << no_of_triangles << " triangles" << endl;
+    cout << file_name << " created with " << no_of_triangles << " triangles" << endl;
+    has_loaded = true;
 }
 
 void OBJModel::addIndices(OBJIndex &index, char **result) {
@@ -279,6 +280,7 @@ IndexedModel OBJModel::toIndexedModel() {
         face_count++;
     }
 
+    cout << "IndexedModel has been made" << endl;
     return result;
 }
 

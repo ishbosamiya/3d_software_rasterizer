@@ -13,14 +13,44 @@ Bitmap::Bitmap(unsigned int width, unsigned int height, unsigned int channels) {
     have_surface = false;
 }
 
+Uint32 Bitmap::getPixel32( SDL_Surface *surface, int x, int y ) {
+    //Convert the pixels to 32 bit
+    Uint32 *pixels = (Uint32 *)surface->pixels;
+
+    int index = y * surface->w + x;
+
+    Uint32 value = pixels[index];
+    //Get the requested pixel
+    return value;
+}
+
 //Bitmap::Bitmap(char *file_name) {
 //    have_surface = true;
-//    SDL_Surface *image = IMG_Load(file_name);
+//    SDL_Surface *image = SDL_LoadBMP(file_name);
 //    if(image == NULL) {
 //        cout << "Could Not Load Image!!!" << endl;
+//        initialize(32, 32, 3);
+//        generateNoise();
 //        return;
 //    }
 //    m_image_surface = image; //SDL_ConvertSurface(image, gSceenSurface->format, NULL);
+//
+//    m_width = image->w;
+//    m_height = image->h;
+//    m_channels = 3;
+//
+//    m_components = new char[m_width * m_height * m_channels];
+//
+//    for(int x = 0; x < m_width; x++) {
+//        for(int y = 0; y < m_height; y++) {
+//            unsigned char r, g, b;
+//            SDL_GetRGB(getPixel32(m_image_surface, x, y), m_image_surface->format, &r, &g, &b);
+//            drawPixel(x, y, r, g, b);
+//            cout << "Image Loaded" << endl;
+//        }
+//    }
+//
+//    have_surface = true;
 //}
 
 void Bitmap::initialize(unsigned int width, unsigned int height, unsigned int channels) {
@@ -34,18 +64,16 @@ void Bitmap::initialize(unsigned int width, unsigned int height, unsigned int ch
 }
 
 SDL_Surface* Bitmap::getSurface() {
-    if(have_surface == false) {
-        //to get the sdl surface to the image
-        m_image_surface = SDL_CreateRGBSurfaceFrom((void *)m_components,
-                                                        m_width,
-                                                        m_height,
-                                                        m_channels * 8,
-                                                        m_width * m_channels,
-                                                        0x0000FF,
-                                                        0x00FF00,
-                                                        0xFF0000,
-                                                        0);
-    }
+    //to get the sdl surface to the image
+    m_image_surface = SDL_CreateRGBSurfaceFrom((void *)m_components,
+                                                    m_width,
+                                                    m_height,
+                                                    m_channels * 8,
+                                                    m_width * m_channels,
+                                                    0x0000FF,
+                                                    0x00FF00,
+                                                    0xFF0000,
+                                                    0);
     return m_image_surface;
 }
 

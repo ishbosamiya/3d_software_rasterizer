@@ -11,6 +11,7 @@ class Vertex
     Vector4f m_texCoords;
 
     public:
+        Vertex();
         Vertex(float x, float y, float z);
         Vertex(Vector4f pos, Vector4f color);
         float getX() {return m_pos.getX();}

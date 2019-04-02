@@ -15,11 +15,16 @@ class Display
         SDL_Window *window;
         SDL_Surface *screenSurface;
         RenderContext render_context;
-        Display(char *title, unsigned int width, unsigned int height);
+        Display(char *title, unsigned int width, unsigned int height, int position_x = -1, int position_y = -1);
         //refreshing the window for image updating
         void updateWindow();
         //to render the image in memory to the window
         void renderImage();
+        void renderImage(RenderContext image);
+
+        RenderContext getRenderContext() { return render_context;}
+        int getWidth() { return width;}
+        int getHeight() { return height;}
         ~Display();
 
     protected:
