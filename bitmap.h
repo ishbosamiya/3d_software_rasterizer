@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <iostream>
+#include <string.h>
 
 #include "SDL.h"
 
@@ -32,7 +33,7 @@ class Bitmap
         char getComponent(int index) { return m_components[index];}
 
         Bitmap getResizedBitmap(int width, int height);
-        Bitmap getResizedBitmap(Bitmap &image);
+        void getResizedBitmap(Bitmap &image);
 
         Uint32 getPixel32( SDL_Surface *surface, int x, int y );
 
@@ -42,7 +43,7 @@ class Bitmap
         int getHeight() {
             return m_height;
         }
-        ~Bitmap();
+        virtual ~Bitmap();
 
     protected:
         unsigned int m_width;

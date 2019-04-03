@@ -7,9 +7,6 @@ RenderContext::RenderContext() {
 }
 
 RenderContext::RenderContext(const RenderContext &obj) {
-//    int width, height;
-//    width = obj.m_width;
-//    height = obj.m_height;
     m_z_buffer = new float[m_width * m_height];
     for(int i = 0; i < m_width * m_height; i++) {
         m_z_buffer[i] = obj.m_z_buffer[i];
@@ -21,9 +18,8 @@ RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned i
 }
 
 void RenderContext::clearDepthBuffer() {
-    for(int i = 0; i < m_width*m_height; i++) {
-        m_z_buffer[i] = std::numeric_limits<float>::max();
-    }
+    float max = std::numeric_limits<float>::max();
+    fill_n(m_z_buffer, m_width * m_height, max);
 }
 
 //same as the overloaded constructor
@@ -32,7 +28,7 @@ void RenderContext::initialize(unsigned int width, unsigned int height, unsigned
     m_z_buffer = new float[width*height];
 }
 
-void RenderContext::drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
+void RenderContext::drawMesh(Mesh &mesh, Matrix4f transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
     for(int i = 0; i < mesh.getNumOfFaces(); i++) {
         vector<Vertex> verts;
         int no_of_verts = mesh.getFace(i).getNumOfVerts();
@@ -136,6 +132,9 @@ void RenderContext::drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
         fillTriangle(v1, v2, v3, texture, back_face_culling);
         return;
     }
+//    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
+//        return;
+//    }
 
     vector<Vertex> vertices;
     vertices.reserve(6);
@@ -160,11 +159,40 @@ void RenderContext::drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
 }
 
 void RenderContext::drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling) {
-    //if all inside then do not clip
+//    //if all inside then do not clip
+//    if(v1.isInsideViewFrustum() && v2.isInsideViewFrustum() && v3.isInsideViewFrustum()) {
+//        fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
+//        return;
+//    }
+////    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
+////        return;
+////    }
+//
+//    vector<Vertex> vertices;
+//    vertices.reserve(6);
+//    vector<Vertex> auxially_vector;
+//    auxially_vector.reserve(6);
+//
+//    vertices.push_back(v1);
+//    vertices.push_back(v2);
+//    vertices.push_back(v3);
+//
+//    if(clipPolygonAxis(vertices, auxially_vector, 0) &&
+//       clipPolygonAxis(vertices, auxially_vector, 1) &&
+//       clipPolygonAxis(vertices, auxially_vector, 2)) {
+//        Vertex initial_vertex = vertices[0];
+//        for(int i = 1; i < vertices.size() - 1; i++) {
+//            fillWireframe(initial_vertex, vertices[i], vertices[i + 1], r, g, b, thickness, back_face_culling);
+//        }
+//    }
+
     if(v1.isInsideViewFrustum() && v2.isInsideViewFrustum() & v3.isInsideViewFrustum()) {
         fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
         return;
     }
+//    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
+//        return;
+//    }
 
     vector<Vertex> vertices;
     vertices.reserve(6);
@@ -180,7 +208,7 @@ void RenderContext::drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char 
        clipPolygonAxis(vertices, auxially_vector, 2)) {
         Vertex initial_vertex = vertices[0];
         for(int i = 1; i < vertices.size() - 1; i++) {
-            fillWireframe(initial_vertex, vertices[i], vertices[i + 1], r, g, b, thickness, back_face_culling);
+            fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
         }
     }
 
@@ -477,33 +505,6 @@ void RenderContext::drawZBuffer() {
 
 Bitmap RenderContext::getNormalizedZBuffer() {
     Bitmap result(m_width, m_height, m_channels);
-//    float min = std::numeric_limits<float>::max();
-//    float max = std::numeric_limits<float>::min();
-//    float temp_max = std::numeric_limits<float>::max();
-//    for(int i = 0; i < m_width*m_height; i++) {
-//        if(min > m_z_buffer[i]) {
-//            min = m_z_buffer[i];
-//        }
-//        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
-//            max = m_z_buffer[i];
-//        }
-//    }
-//    max += 0.001;
-//    //std::cout << "Min: " << min << std::endl;
-//    for(int i = 0; i < m_width; i++) {
-//        for(int j = 0; j < m_height; j++) {
-//            float value = m_z_buffer[i + j*m_width];
-//            float relative = 0;
-//            if(max != min && value != temp_max) {
-//                relative = (1.0 - ((value - min)/(max - min)));
-//            }
-//            if(value == temp_max) {
-//                relative = 0;
-//            }
-//            char colour = relative * 255;
-//            result.drawPixel(i, j, colour, colour, colour);
-//        }
-//    }
     getNormalizedZBuffer(result);
     return result;
 }

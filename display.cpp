@@ -9,7 +9,7 @@ Display::Display(char *title, unsigned int width, unsigned int height, int posit
     this->width = width;
     this->height = height;
     window = NULL;
-    screenSurface = NULL;
+    screen_surface = NULL;
 
     //making sure that sdl has initialized
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -36,7 +36,7 @@ Display::Display(char *title, unsigned int width, unsigned int height, int posit
     render_context.generateNoise();
 
     //making the window surface
-    screenSurface = SDL_GetWindowSurface(window);
+    screen_surface = SDL_GetWindowSurface(window);
 }
 
 void Display::updateWindow() {
@@ -67,7 +67,7 @@ void Display::updateWindow() {
         }
 
         //Program Logic after this
-        SDL_BlitSurface(render_context.getSurface(), NULL, screenSurface, NULL);
+        SDL_BlitSurface(render_context.getSurface(), NULL, screen_surface, NULL);
 
         //updating the window
         SDL_UpdateWindowSurface(window);
@@ -75,20 +75,21 @@ void Display::updateWindow() {
 }
 
 void Display::renderImage(){
-    SDL_BlitSurface(render_context.getSurface(), NULL, screenSurface, NULL);
+    SDL_BlitSurface(render_context.getSurface(), NULL, screen_surface, NULL);
 }
 
 void Display::renderImage(RenderContext &image){
-    SDL_BlitSurface(image.getSurface(), NULL, screenSurface, NULL);
+    SDL_BlitSurface(image.getSurface(), NULL, screen_surface, NULL);
 }
 
 void Display::renderImage(Bitmap &image){
-    SDL_BlitSurface(image.getSurface(), NULL, screenSurface, NULL);
+    SDL_BlitSurface(image.getSurface(), NULL, screen_surface, NULL);
 }
 
 Display::~Display() {
     //deleting the context of window
+    cout << "Freeing window in Display" << endl;
     SDL_DestroyWindow(window);
-    cout << "freeing sdl_surface" << endl;
-    SDL_FreeSurface(screenSurface);
+    cout << "Freeing screen_surface in Display" << endl;
+    SDL_FreeSurface(screen_surface);
 }

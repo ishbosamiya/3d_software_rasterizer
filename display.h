@@ -13,7 +13,7 @@ class Display
 
     public:
         SDL_Window *window;
-        SDL_Surface *screenSurface;
+        SDL_Surface *screen_surface;
         RenderContext render_context;
         Display(char *title, unsigned int width, unsigned int height, int position_x = -1, int position_y = -1);
         //refreshing the window for image updating

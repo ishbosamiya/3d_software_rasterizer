@@ -8,15 +8,17 @@
 #include "objmodel.h"
 #include "transform.h"
 #include "camera.h"
+#include "input.h"
 using namespace std;
+
+const int width = 1280*0.9;
+const int height = 720*0.9;
 
 float toRadians(float angle) {
     return angle * 3.141592653 / 180.0;
 }
 
 int main(int argc, char *argv[]) {
-    const int width = 1280;
-    const int height = 720;
     //for fps counter
     int step = 1;
     float average_fps = 0;
@@ -26,36 +28,26 @@ int main(int argc, char *argv[]) {
 
     Bitmap texture(32, 32, 3);
     texture.generateNoise();
+    Bitmap texture2(15, 15, 3);
+    texture2.generateNoise();
 
     Mesh *mesh;
-    Mesh mesh_data[7];
+    Mesh mesh_data[9];
     mesh = mesh_data[2].initialize("monkey0.obj");
     Transform transform_mesh(Vector4f(0.0, 0.0, 3.0, 1.0));
     Mesh terrainMesh;
     terrainMesh.initialize("terrain0.obj");
     Transform terrain_transform(Vector4f(0.0, -1.0, 0.0, 1.0));
 
-    bool draw_triangle = true;
     bool draw_wireframe = false;
     bool draw_z_buffer = false;
-
-    //Stars3D stars(4096, 64.0f, 0.1f, 72);
-    //Random Triangle Vertices
-    Vertex minYVert(Vector4f(-1, -1, 0, 1),
-                    Vector4f(0, 0, 0, 0));
-    Vertex midYVert(Vector4f(0, 1, 0, 1),
-                    Vector4f(0.5, 1, 0, 0));
-    Vertex maxYVert(Vector4f(1, -1, 0, 1),
-                    Vector4f(1, 0, 0, 0));
+    bool show_cursor = false;
+    bool capture_mouse = true;
 
     //setting up perspective
     Matrix4f projection;
     projection.initPerspective(toRadians(70.0), (float)display.render_context.getWidth()/(float)display.render_context.getHeight(), 0.1, 1000.0);
-    Matrix4f translation;
-    Matrix4f rotation;
-    Matrix4f scale;
-
-    Camera camera(projection);
+    Camera camera(projection, width, height);
     camera.rotate(Vector4f(0, 1, 0, 1), toRadians(180));
     camera.move(Vector4f(0, 0, -1, 1), -7);
 
@@ -68,6 +60,10 @@ int main(int argc, char *argv[]) {
     SDL_Event event;
     int mouse_x;
     int mouse_y;
+    SDL_ShowCursor(SDL_DISABLE);
+    SDL_CaptureMouse(SDL_TRUE);
+    Input input(&display);
+    float standard_mov_amt = 5.0 * 0.0002;
     while(true) {
         //getting the time difference between each frame
         unsigned long long int current_time = SDL_GetTicks();
@@ -75,91 +71,81 @@ int main(int argc, char *argv[]) {
         previous_time = current_time;
         average_fps += delta;
         //cout << "FPS: " << 1000.0/delta << endl;
-        if(step % 60 == 0) {
+        if(step % 10 == 0) {
             cout << "FPS: " << 1000.0/((float)average_fps/(float)step) << endl;
-            if(step >= 600) {
+            if(step >= 100) {
                 average_fps = (float)average_fps/(float)step;
                 step = 1;
             }
         }
-        if(SDL_WaitEvent(&event)) {
-            switch(event.type) {
-                case SDL_QUIT:
-                    return 0;
-                case SDL_KEYDOWN:
-                    camera.update(event, delta, mouse_x, mouse_y);
-                    switch(event.key.keysym.sym) {
-                        case SDLK_ESCAPE:
-                            SDL_Quit();
-                            return 0;
-                        case SDLK_1:
-                            mesh = mesh_data[0].initialize("icosphere.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_2:
-                            mesh = mesh_data[1].initialize("sphere_high.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_3:
-                            mesh = mesh_data[2].initialize("monkey0.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_4:
-                            mesh = mesh_data[3].initialize("cylinder.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_5:
-                            mesh = mesh_data[4].initialize("cylinder_hollow.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_6:
-                            mesh = mesh_data[5].initialize("man.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_7:
-                            mesh = mesh_data[6].initialize("teapot.obj");
-                            draw_triangle = false;
-                            break;
-                        case SDLK_f:
-                            if(draw_z_buffer == true && draw_wireframe == false) {
-                                draw_z_buffer = !draw_z_buffer;
-                            }
-                            draw_wireframe = !draw_wireframe;
-                            break;
-                        case SDLK_z:
-                            if(draw_wireframe == true && draw_z_buffer == false) {
-                                draw_wireframe = !draw_wireframe;
-                            }
-                            draw_z_buffer = !draw_z_buffer;
-                        default:
-                            break;
-                    }
-                    break;
-//                default:
-//                    break;
-                case SDL_MOUSEMOTION:
-                    mouse_x = event.motion.x;
-                    mouse_y = event.motion.y;
-                    camera.update(event, delta, mouse_x, mouse_y);
-                    if(mouse_x >= display.getWidth() - 1) {
-                        SDL_WarpMouseInWindow(display.window, 0, mouse_y);
-                        //SDL_WarpMouseGlobal(0, mouse_y);
-                    }
-                    else if(mouse_x <= 1) {
-                        SDL_WarpMouseInWindow(display.window, display.getWidth() - 1, mouse_y);
-                        //SDL_WarpMouseGlobal(display.getWidth() - 1, mouse_y);
-                    }
-                    if(mouse_y >= display.getHeight() - 1) {
-                        SDL_WarpMouseInWindow(display.window, mouse_x, 0);
-                        //SDL_WarpMouseGlobal(mouse_x, 0);
-                    }
-                    else if(mouse_y <= 1) {
-                        SDL_WarpMouseInWindow(display.window, mouse_x, display.getHeight() - 1);
-                        //SDL_WarpMouseGlobal(mouse_x, display.getHeight() - 1);
-                    }
-                    break;
+        float mov_amt = standard_mov_amt * delta;
+        //input data
+        input.event(event, capture_mouse);
+        if(input.isPressed(KEY_ESCAPE)) {
+            SDL_Quit();
+            return 0;
+        }
+        if(input.isPressed(KEY_1)) {
+            mesh = mesh_data[0].initialize("icosphere.obj");
+        }
+        if(input.isPressed(KEY_2)) {
+            mesh = mesh_data[1].initialize("sphere_high.obj");
+        }
+        if(input.isPressed(KEY_3)) {
+            mesh = mesh_data[2].initialize("monkey0.obj");
+        }
+        if(input.isPressed(KEY_4)) {
+            mesh = mesh_data[3].initialize("cylinder.obj");
+        }
+        if(input.isPressed(KEY_5)) {
+            mesh = mesh_data[4].initialize("cylinder_hollow.obj");
+        }
+        if(input.isPressed(KEY_6)) {
+            mesh = mesh_data[5].initialize("man.obj");
+        }
+        if(input.isPressed(KEY_7)) {
+            mesh = mesh_data[6].initialize("teapot.obj");
+        }
+        if(input.isPressed(KEY_8)) {
+            mesh = mesh_data[7].initialize("monster_low.obj");
+        }
+        if(input.isPressed(KEY_9)) {
+            mesh = mesh_data[8].initialize("monster_high.obj");
+        }
+        if(input.isPressed(KEY_F)) {
+            if(draw_z_buffer == true && draw_wireframe == false) {
+                draw_z_buffer = !draw_z_buffer;
+            }
+            draw_wireframe = !draw_wireframe;
+        }
+        if(input.isPressed(KEY_Z)) {
+            if(draw_wireframe == true && draw_z_buffer == false) {
+                draw_wireframe = !draw_wireframe;
+            }
+            draw_z_buffer = !draw_z_buffer;
+        }
+        if(input.isPressed(KEY_C)) {
+            if(show_cursor) {
+                SDL_ShowCursor(SDL_DISABLE);
+                SDL_CaptureMouse(SDL_TRUE);
+                show_cursor = false;
+                capture_mouse = true;
+            }
+            else {
+                SDL_ShowCursor(SDL_ENABLE);
+                SDL_CaptureMouse(SDL_FALSE);
+                show_cursor = true;
+                capture_mouse = false;
             }
         }
+        if(input.isPressed(KEY_UP)) {
+            standard_mov_amt += 0.003;
+        }
+        if(input.isPressed(KEY_DOWN)) {
+            standard_mov_amt -= 0.003;
+        }
+        input.getMouse(mouse_x, mouse_y);
+        camera.update(input, delta, mouse_x, mouse_y, mov_amt);
 
         //Program Logic after this
         //basic display wiping
@@ -168,10 +154,8 @@ int main(int argc, char *argv[]) {
 
         //mesh drawing
         Matrix4f vp = camera.getViewProjection();
-        Matrix4f temp = vp.mul(transform_mesh.getTransformation());
-        display.render_context.drawMesh(*mesh, temp, texture, draw_wireframe, false);
-        temp = vp.mul(terrain_transform.getTransformation());
-        display.render_context.drawMesh(terrainMesh, temp, texture, draw_wireframe, false);
+        display.render_context.drawMesh(*mesh, vp.mul(transform_mesh.getTransformation()), texture, draw_wireframe, false);
+        display.render_context.drawMesh(terrainMesh, vp.mul(terrain_transform.getTransformation()), texture2, draw_wireframe, false);
 
         //depth map displaying
         Bitmap z_buffer = display.render_context.getNormalizedZBuffer();

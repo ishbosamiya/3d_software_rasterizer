@@ -32,7 +32,7 @@ Bitmap Bitmap::getResizedBitmap(int width, int height) {
     return image;
 }
 
-Bitmap Bitmap::getResizedBitmap(Bitmap &image) {
+void Bitmap::getResizedBitmap(Bitmap &image) {
     int width = image.getWidth();
     int height = image.getHeight();
     for(int x = 0; x < width; x++) {
@@ -110,17 +110,20 @@ SDL_Surface* Bitmap::getSurface() {
 
 void Bitmap::clear(char shade) {
     //running through all the pixel's of the image to set it to one single shade
-    for(int i = 0; i < m_width * m_height * m_channels; i++) {
-        m_components[i] = shade;
-    }
+//    for(int i = 0; i < m_width * m_height * m_channels; i++) {
+//        m_components[i] = shade;
+//    }
+    memset(m_components, shade, m_width * m_height * m_channels);
 }
 
 void Bitmap::drawPixel(int x, int y, char r, char g, char b) {
     //changing colour of single pixel based on specified location of the pixel
-    int index = (x + y * m_width) * m_channels;
-    m_components[index + 0] = r;
-    m_components[index + 1] = g;
-    m_components[index + 2] = b;
+    if(x >= 0 && x < m_width && y >=0 && y < m_height) {
+        int index = (x + y * m_width) * m_channels;
+        m_components[index + 0] = r;
+        m_components[index + 1] = g;
+        m_components[index + 2] = b;
+    }
 }
 
 void Bitmap::copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap &src) {
@@ -151,5 +154,4 @@ void Bitmap::generateNoise() {
 Bitmap::~Bitmap() {
     delete [] m_components;
     SDL_FreeSurface(m_image_surface);
-    //delete m_image_surface;
 }

@@ -2,10 +2,12 @@
 
 Mesh::Mesh() {
     is_initialized = false;
+    m_file_name = NULL;
 }
 
 Mesh::Mesh(char *file_name)
 {
+    m_file_name = file_name;
     initialize(file_name);
 }
 
@@ -57,7 +59,7 @@ Mesh* Mesh::initialize(char *file_name) {
             is_initialized = true;
         }
     }
-    cout << file_name << " has been loaded" << endl;
+    cout << file_name << " has been loaded with " << no_of_faces << " no of faces" << endl;
     fin.close();
     delete temp;
     return this;

@@ -5,6 +5,8 @@
 #include <limits>
 #include <vector>
 #include <math.h>
+#include <string.h>
+#include <algorithm>
 
 #include "bitmap.h"
 #include "vertex.h"
@@ -32,7 +34,7 @@ class RenderContext: public Bitmap
         void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling);
         void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool wireframe, bool back_face_culling);
         void fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling);
-        void drawMesh(Mesh &mesh, Matrix4f &transform, Bitmap &texture, bool wireframe, bool back_face_culling);
+        void drawMesh(Mesh &mesh, Matrix4f transform, Bitmap &texture, bool wireframe, bool back_face_culling);
         void drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling);
         void drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling);
         void drawWire(Vertex v1, Vertex v2, int thickness, char r, char g, char b);
@@ -45,7 +47,7 @@ class RenderContext: public Bitmap
         RenderContext getResizedRenderContext(int width, int height);
         void getResizedRenderContext(RenderContext &image);
 
-        ~RenderContext();
+        virtual ~RenderContext();
 
     protected:
 };
