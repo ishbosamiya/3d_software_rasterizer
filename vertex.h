@@ -25,6 +25,7 @@ class Vertex
         void setNormal(Vector4f normal) {m_normal = normal;}
         float triangleArea(Vertex b, Vertex c);
         Vertex transform(Matrix4f transform_);
+        Vertex transform(Matrix4f transform_, Matrix4f normal_transform);
         Vertex perspectiveDivide();
         Vertex lerp(Vertex other, float lerp_amount);
         bool isInsideViewFrustum();

@@ -49,6 +49,12 @@ Vertex Vertex::transform(Matrix4f transform_) {
     return Vertex(transform_.transform(m_pos), m_texCoords, m_normal);
 }
 
+Vertex Vertex::transform(Matrix4f transform_, Matrix4f normal_transform) {
+    return Vertex(transform_.transform(m_pos),
+                  m_texCoords,
+                  normal_transform.transform(m_normal).normalized());
+}
+
 //To add perspective to the vertex
 Vertex Vertex::perspectiveDivide() {
     return Vertex(Vector4f(m_pos.getX()/m_pos.getW(), m_pos.getY()/m_pos.getW(), m_pos.getZ()/m_pos.getW(), m_pos.getW())

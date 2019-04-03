@@ -87,24 +87,23 @@ void OBJModel::initialize(char *file_name) {
                         temp *= 10;
                         temp += (int)result[i][j] - (int)'0';
                     }
-                    //cout << "temp: " << temp << endl;
                     if(i == 0) {
-                        cout << temp << "/";
+                        //cout << temp << "/";
                         face.addPosition(temp - 1);
                     }
                     else if(i == 1) {
-                        cout << temp << "/";
+                        //cout << temp << "/";
                         face.addTexCoord(temp - 1);
                     }
                     else if(i == 2) {
-                        cout << temp << " ";
+                        //cout << temp << " ";
                         face.addNormal(temp - 1);
                     }
                 }
-                cout << " ";
+                //cout << " ";
                 delete result;
             }
-            cout << endl;
+            //cout << endl;
             addElement(m_faces, face);
 
             no_of_triangles += no_of_vertices - 2;

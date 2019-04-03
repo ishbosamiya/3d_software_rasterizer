@@ -28,7 +28,7 @@ class Camera
         Camera(Matrix4f projection, int width, int height);
 
         Matrix4f getViewProjection();
-        void update(Input &input, float delta, int x, int y, float mov_amt);
+        void update(Input &input, float delta, float mov_amt);
         void move(Vector4f dir, float amt);
         void rotate(Vector4f axis, float angle);
 

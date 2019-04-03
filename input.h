@@ -70,6 +70,7 @@ class Input
     int mouse_diff_x;
     int mouse_diff_y;
     Display *display;
+    void initializeMouse();
     public:
         Input(Display *display);
         void event(SDL_Event &event, bool capture_mouse);

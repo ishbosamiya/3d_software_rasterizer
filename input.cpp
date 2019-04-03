@@ -7,9 +7,9 @@ Input::Input(Display *display) {
     }
 //    mouse_x = 0;
 //    mouse_y = 0;
-    mouse_prev_x = 250;
-    mouse_prev_y = 250;
-    SDL_WarpMouseGlobal(mouse_prev_x, mouse_prev_y);
+    SDL_WarpMouseInWindow(display->window, display->getWidth() / 2, display->getHeight() / 2);
+    SDL_GetGlobalMouseState(&mouse_prev_x, &mouse_prev_y);
+    //SDL_WarpMouseGlobal(mouse_prev_x, mouse_prev_y);
     mouse_x = mouse_prev_x;
     mouse_y = mouse_prev_y;
     mouse_diff_x = 0;
@@ -18,14 +18,38 @@ Input::Input(Display *display) {
     this->display = display;
 }
 
+void Input::initializeMouse() {
+    SDL_WarpMouseInWindow(display->window, display->getWidth() / 2, display->getHeight() / 2);
+    SDL_GetGlobalMouseState(&mouse_prev_x, &mouse_prev_y);
+    mouse_x = mouse_prev_x;
+    mouse_y = mouse_prev_y;
+    mouse_diff_x = 0;
+    mouse_diff_y = 0;
+}
+
 void Input::event(SDL_Event &event, bool capture_mouse) {
     //this works
     SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
+
+    if(SDL_GetGlobalMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+        m_key_pressed[MOUSE_LEFT_CLICK] = true;
+    }
+    else {
+        m_key_pressed[MOUSE_LEFT_CLICK] = false;
+    }
+    if(SDL_GetGlobalMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+        m_key_pressed[MOUSE_RIGHT_CLICK] = true;
+    }
+    else {
+        m_key_pressed[MOUSE_RIGHT_CLICK] = false;
+    }
+
+
     if(capture_mouse) {
         SDL_WarpMouseGlobal(mouse_prev_x, mouse_prev_y);
+        mouse_diff_x = mouse_x - mouse_prev_x;
+        mouse_diff_y = mouse_y - mouse_prev_y;
     }
-    mouse_diff_x = mouse_x - mouse_prev_x;
-    mouse_diff_y = mouse_y - mouse_prev_y;
     if(mouse_diff_x < 2 && mouse_diff_x > -2) {
         mouse_diff_x = 0;
     }
@@ -301,6 +325,9 @@ void Input::event(SDL_Event &event, bool capture_mouse) {
         m_key_pressed[KEY_SHIFT] = false;
     }
 
+    for(int i = 0; i < 25; i++) {
+        SDL_PumpEvents();
+    }
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
 }
 

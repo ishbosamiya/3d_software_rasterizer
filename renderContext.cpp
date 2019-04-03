@@ -28,7 +28,8 @@ void RenderContext::initialize(unsigned int width, unsigned int height) {
     m_z_buffer = new float[width*height];
 }
 
-void RenderContext::drawMesh(Mesh &mesh, Matrix4f transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
+void RenderContext::drawMesh(Mesh &mesh, Matrix4f view_projection, Matrix4f transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
+    Matrix4f mvp = view_projection.mul(transform);
     for(int i = 0; i < mesh.getNumOfFaces(); i++) {
         vector<Vertex> verts;
         int no_of_verts = mesh.getFace(i).getNumOfVerts();
@@ -38,7 +39,7 @@ void RenderContext::drawMesh(Mesh &mesh, Matrix4f transform, Bitmap &texture, bo
             Vector4f texCoord = mesh.getTexCoord(mesh.getFace(i).getTexCoord(j));
             Vector4f normal = mesh.getNormal(mesh.getFace(i).getNormal(j));
             Vertex temp_vert(position, texCoord, normal);
-            verts.push_back(temp_vert.transform(transform));
+            verts.push_back(temp_vert.transform(mvp, transform));
         }
         //here I can make the wireframe not have the triangle, but for the rasterizer I need to make them into triangles
         for(int j = 0; j < verts.size() - 2; j++) {
@@ -210,6 +211,18 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
     //adding the perspective transforms to the triangle vertices
     //cout << "fill triangle" << endl;
     Shader shader;
+
+    bool use_surface_normals = false;
+    if(use_surface_normals) {
+        Vector4f p1 = v2.getPosition().sub(v1.getPosition()).normalized();
+        Vector4f p2 = v3.getPosition().sub(v1.getPosition()).normalized();
+
+        Vector4f normal = p2.cross(p1).normalized();
+
+        v1.setNormal(normal);
+        v2.setNormal(normal);
+        v3.setNormal(normal);
+    }
 
     Vertex minYVert = shader.vertexShader(v1, 0, getWidth(), getHeight());
     Vertex midYVert = shader.vertexShader(v2, 1, getWidth(), getHeight());

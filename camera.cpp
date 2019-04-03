@@ -18,18 +18,13 @@ Matrix4f Camera::getViewProjection() {
 }
 
 //to check
-void Camera::update(Input &input, float delta, int x, int y, float mov_amt) {
+void Camera::update(Input &input, float delta, float mov_amt) {
+    int x, y;
+    input.getMouseDifference(x, y);
     static int prev_x = 0;
     static int prev_y = 0;
     float sensitivity_x = delta * 0.0001 * (abs(prev_x - x)) * 0.5;
     float sensitivity_y = delta * 0.00005 * (abs(prev_y - y)) * 0.5;
-
-//    if(x <= -m_width || x >= m_width) {
-//        sensitivity_x = 0;
-//    }
-//    if(y <= -m_height || y >= m_height) {
-//        sensitivity_y = 0;
-//    }
 
     if(x < prev_x) {
         rotate(Y_AXIS, -sensitivity_x);
@@ -45,11 +40,10 @@ void Camera::update(Input &input, float delta, int x, int y, float mov_amt) {
     }
     prev_x = 0;
     prev_y = 0;
-    //cout << "mouse_x: " << x << " mouse_y: " << y << endl;
 
     //keyboard
     if(input.isPressed(KEY_W)) {
-        move(getTransform().getRot().getForward(), mov_amt);
+    move(getTransform().getRot().getForward(), mov_amt);
     }
     if(input.isPressed(KEY_S)) {
         move(getTransform().getRot().getForward(), -mov_amt);
