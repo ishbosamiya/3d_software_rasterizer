@@ -13,8 +13,8 @@ RenderContext::RenderContext(const RenderContext &obj) {
     }
 }
 
-RenderContext::RenderContext(unsigned int width, unsigned int height, unsigned int channels) {
-    initialize(width, height, channels);
+RenderContext::RenderContext(unsigned int width, unsigned int height) {
+    initialize(width, height);
 }
 
 void RenderContext::clearDepthBuffer() {
@@ -23,8 +23,8 @@ void RenderContext::clearDepthBuffer() {
 }
 
 //same as the overloaded constructor
-void RenderContext::initialize(unsigned int width, unsigned int height, unsigned int channels) {
-    Bitmap::initialize(width, height, channels);
+void RenderContext::initialize(unsigned int width, unsigned int height) {
+    Bitmap::initialize(width, height);
     m_z_buffer = new float[width*height];
 }
 
@@ -76,7 +76,9 @@ void RenderContext::drawWire(Vertex v1, Vertex v2, int thickness, char r, char g
         for(int i = prev_x; i <= x; i++) {
             int m_x = ceil(i);
             if(m_x >= 0 && m_x < getWidth() && y >= 0 && y < getHeight()) {
-                drawPixel(m_x, y, r, g, b);
+                Colour temp_colour;
+                temp_colour.fill(r, g, b, 255);
+                drawPixel(m_x, y, temp_colour);
             }
         }
     }
@@ -425,7 +427,9 @@ void RenderContext::drawWire(Edge &edge, int thickness, char r, char g, char b) 
         for(int x = x_start; x <= x_end; x++) {
             for(int j = 0; j < thickness; j++) {
                 for(int k = 0; k < thickness; k++) {
-                    drawPixel(x + j, y_start + k, r, g, b);
+                    Colour temp_colour;
+                    temp_colour.fill(r, g, b, 255);
+                    drawPixel(x + j, y_start + k, temp_colour);
                 }
             }
         }
@@ -441,12 +445,16 @@ void RenderContext::drawWire(Edge &edge, int thickness, char r, char g, char b) 
                 int curr_x = ceil(edge.getX());
                 if(curr_x > prev_x) {
                     for(int x = prev_x; x <= curr_x; x++) {
-                        drawPixel(x + j, i + k, r, g, b);
+                        Colour temp_colour;
+                        temp_colour.fill(r, g, b, 255);
+                        drawPixel(x + j, i + k, temp_colour);
                     }
                 }
                 else {
                     for(int x = curr_x; x <= prev_x; x++) {
-                        drawPixel(x + j, i + k, r, g, b);
+                        Colour temp_colour;
+                        temp_colour.fill(r, g, b, 255);
+                        drawPixel(x + j, i + k, temp_colour);
                     }
                 }
             }
@@ -467,7 +475,9 @@ void RenderContext::drawWire(Edge &edge, int thickness, char r, char g, char b) 
     for(int x = x_start; x <= x_end; x++) {
         for(int j = 0; j < thickness; j++) {
             for(int k = 0; k < thickness; k++) {
-                drawPixel(x + j, y_end + k, r, g, b);
+                Colour temp_colour;
+                temp_colour.fill(r, g, b, 255);
+                drawPixel(x + j, y_end + k, temp_colour);
             }
         }
     }
@@ -498,13 +508,15 @@ void RenderContext::drawZBuffer() {
                 relative = 0;
             }
             char colour = relative * 255;
-            drawPixel(i, j, colour, colour, colour);
+            Colour temp_colour;
+            temp_colour.fill(colour);
+            drawPixel(i, j, temp_colour);
         }
     }
 }
 
 Bitmap RenderContext::getNormalizedZBuffer() {
-    Bitmap result(m_width, m_height, m_channels);
+    Bitmap result(m_width, m_height);
     getNormalizedZBuffer(result);
     return result;
 }
@@ -534,13 +546,15 @@ void RenderContext::getNormalizedZBuffer(Bitmap &image) {
                 relative = 0;
             }
             char colour = relative * 255;
-            image.drawPixel(i, j, colour, colour, colour);
+            Colour temp_colour;
+            temp_colour.fill(colour);
+            image.drawPixel(i, j, temp_colour);
         }
     }
 }
 
 RenderContext RenderContext::getResizedRenderContext(int width, int height) {
-    RenderContext image(width, height, 3);
+    RenderContext image(width, height);
     for(int x = 0; x < width; x++) {
         for(int y = 0; y < height; y++) {
             int source_x = x * getWidth() / width;

@@ -31,7 +31,7 @@ Display::Display(char *title, unsigned int width, unsigned int height, int posit
     }
 
     //making the image
-    render_context.initialize(width, height, 3);
+    render_context.initialize(width, height);
     render_context.clear(25);
     render_context.generateNoise();
 

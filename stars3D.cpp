@@ -56,7 +56,9 @@ void Stars3D::updateAndRender(Bitmap &target, float delta) {
         }
         //otherwise draw that point on the screen (in this case the image)
         else {
-            target.drawPixel(x, y, 255, 255, 255);
+            Colour temp_colour;
+            temp_colour.fill(255);
+            target.drawPixel(x, y, temp_colour);
         }
     }
 }

@@ -38,6 +38,8 @@ class Face
         int getNormal(int loc) { return m_normals[loc];}
         vector<int> getNormals() { return m_normals;}
 
+        void printNormalIndices();
+
         int getNumOfVerts() { return m_positions.size();}
         virtual ~Face();
 

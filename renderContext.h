@@ -28,8 +28,8 @@ class RenderContext: public Bitmap
     public:
         RenderContext();
         RenderContext(const RenderContext &obj);
-        RenderContext(unsigned int width, unsigned int height, unsigned int channels = 3);
-        void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
+        RenderContext(unsigned int width, unsigned int height);
+        void initialize(unsigned int width, unsigned int height);
 
         void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling);
         void fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool wireframe, bool back_face_culling);

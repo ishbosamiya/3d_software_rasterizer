@@ -44,19 +44,25 @@ void Face::readFaceFromFile(ifstream &fin) {
     m_texCoords.reserve(no_of_texCoords);
     m_normals.reserve(no_of_normals);
     for(int i = 0; i < no_of_positions; i++) {
-        int data = m_positions[i];
+        int data;
         fin.read((char *)&data, sizeof(data));
         m_positions.push_back(data);
     }
     for(int i = 0; i < no_of_texCoords; i++) {
-        int data = m_texCoords[i];
+        int data;
         fin.read((char *)&data, sizeof(data));
         m_texCoords.push_back(data);
     }
     for(int i = 0; i < no_of_normals; i++) {
-        int data = m_normals[i];
+        int data;
         fin.read((char *)&data, sizeof(data));
         m_normals.push_back(data);
+    }
+}
+
+void Face::printNormalIndices() {
+    for(int i = 0; i < m_normals.size(); i++) {
+        cout << m_normals[i] << " ";
     }
 }
 

@@ -78,7 +78,7 @@ void OBJModel::initialize(char *file_name) {
             }
             Face face;
             for(int i = 0; i < no_of_vertices; i++) {
-                char info[100];
+                char info[1000];
                 fin >> info;
                 char **result = getSplit(info, '/');
                 for(int i = 0; i < 3; i++) {
@@ -89,16 +89,22 @@ void OBJModel::initialize(char *file_name) {
                     }
                     //cout << "temp: " << temp << endl;
                     if(i == 0) {
+                        cout << temp << "/";
                         face.addPosition(temp - 1);
                     }
                     else if(i == 1) {
+                        cout << temp << "/";
                         face.addTexCoord(temp - 1);
                     }
                     else if(i == 2) {
+                        cout << temp << " ";
                         face.addNormal(temp - 1);
                     }
                 }
+                cout << " ";
+                delete result;
             }
+            cout << endl;
             addElement(m_faces, face);
 
             no_of_triangles += no_of_vertices - 2;
@@ -109,6 +115,14 @@ void OBJModel::initialize(char *file_name) {
             //cout << temp << endl;
         }
     }
+
+//    for(int i = 0; i < m_faces.size(); i++) {
+//        Face temp = getElement(m_faces, i);
+//        cout << "Face no: " << i << endl;
+//        temp.printNormalIndices();
+//        cout << endl;
+//    }
+
     cout << file_name << " created with " << no_of_triangles << " triangles" << endl;
     has_loaded = true;
 }
@@ -154,7 +168,7 @@ char** OBJModel::getSplit(char *data, char delimiter) {
     }
     char **result = new char*[no_of_sub_strings];
     for(int i = 0; i < no_of_sub_strings; i++) {
-        result[i] = new char[max_sub_string];
+        result[i] = new char[max_sub_string + 1];
     }
     int line_no = 0;
     int repeater = 0;

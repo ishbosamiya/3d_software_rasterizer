@@ -13,6 +13,7 @@ Mesh::Mesh(char *file_name)
 
 Mesh* Mesh::initialize(char *file_name) {
     if(is_initialized) {
+        cout << file_name << " has been already been loaded loaded with " << no_of_faces << " no of faces" << endl;
         return this;
     }
     m_file_name = file_name;
@@ -32,9 +33,11 @@ Mesh* Mesh::initialize(char *file_name) {
         obj.toIndexedModel(model);
         equateListToVector(m_positions, model.getPositions());
         equateListToVector(m_texCoords, model.getTexCoords());
+        equateListToVector(m_normals, model.getNormals());
         equateListToVector(m_faces, model.getFaces());
         no_of_positions = m_positions.size();
         no_of_texCoords = m_texCoords.size();
+        no_of_normals = m_normals.size();
         no_of_faces = m_faces.size();
         writeMeshToFile();
         is_initialized = true;
@@ -51,9 +54,11 @@ Mesh* Mesh::initialize(char *file_name) {
             obj.toIndexedModel(model);
             equateListToVector(m_positions, model.getPositions());
             equateListToVector(m_texCoords, model.getTexCoords());
+            equateListToVector(m_normals, model.getNormals());
             equateListToVector(m_faces, model.getFaces());
             no_of_positions = m_positions.size();
             no_of_texCoords = m_texCoords.size();
+            no_of_normals = m_normals.size();
             no_of_faces = m_faces.size();
             writeMeshToFile();
             is_initialized = true;
@@ -79,6 +84,7 @@ bool Mesh::writeMeshToFile() {
 
     fout.write((char *)&no_of_positions, sizeof(no_of_positions));
     fout.write((char *)&no_of_texCoords, sizeof(no_of_texCoords));
+    fout.write((char *)&no_of_normals, sizeof(no_of_normals));
     fout.write((char *)&no_of_faces, sizeof(no_of_faces));
     for(int i = 0; i < no_of_positions; i++) {
         Vector4f position = m_positions[i];
@@ -87,6 +93,10 @@ bool Mesh::writeMeshToFile() {
     for(int i = 0; i < no_of_texCoords; i++) {
         Vector4f texCoord = m_texCoords[i];
         fout.write((char *)&texCoord, sizeof(texCoord));
+    }
+    for(int i = 0; i < no_of_normals; i++) {
+        Vector4f normal = m_normals[i];
+        fout.write((char *)&normal, sizeof(normal));
     }
     for(int i = 0; i < no_of_faces; i++) {
         Face face = m_faces[i];
@@ -112,9 +122,11 @@ bool Mesh::readMeshFromFile() {
 
     fin.read((char *)&no_of_positions, sizeof(int));
     fin.read((char *)&no_of_texCoords, sizeof(int));
+    fin.read((char *)&no_of_normals, sizeof(int));
     fin.read((char *)&no_of_faces, sizeof(int));
     m_positions.reserve(no_of_positions);
     m_texCoords.reserve(no_of_texCoords);
+    m_normals.reserve(no_of_normals);
     m_faces.reserve(no_of_faces);
     for(int i = 0; i < no_of_positions; i++) {
         Vector4f position;
@@ -125,6 +137,11 @@ bool Mesh::readMeshFromFile() {
         Vector4f texCoord;
         fin.read((char *)&texCoord, sizeof(Vector4f));
         m_texCoords.push_back(texCoord);
+    }
+    for(int i = 0; i < no_of_normals; i++) {
+        Vector4f normal;
+        fin.read((char *)&normal, sizeof(Vector4f));
+        m_normals.push_back(normal);
     }
     for(int i = 0; i < no_of_faces; i++) {
         Face face;

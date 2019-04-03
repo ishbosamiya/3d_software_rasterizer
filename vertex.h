@@ -14,7 +14,7 @@ class Vertex
     public:
         Vertex();
         Vertex(float x, float y, float z);
-        Vertex(Vector4f pos, Vector4f color);
+        Vertex(Vector4f pos, Vector4f texCoords);
         float get(int index);
         float getX() {return m_pos.getX();}
         float getY() {return m_pos.getY();}

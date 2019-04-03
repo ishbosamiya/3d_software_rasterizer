@@ -39,9 +39,9 @@ int main(int argc, char *argv[]) {
     Display z_buffer_display("z Buffer", width/5, height/5, 0, 0);
     Display display("Software Rendering", width, height);
 
-    Bitmap texture(32, 32, 3);
+    Bitmap texture(32, 32);
     texture.generateNoise();
-    Bitmap texture2(8, 8, 3);
+    Bitmap texture2(8, 8);
     texture2.generateNoise();
 
     Mesh *mesh;

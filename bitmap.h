@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "SDL.h"
+#include "colour.h"
 
 using namespace std;
 
@@ -15,22 +16,22 @@ class Bitmap
         Bitmap();
         Bitmap(const Bitmap &obj);
         //Bitmap(char *file_name);
-        Bitmap(unsigned int width, unsigned int height, unsigned int channels = 3);
-        virtual void initialize(unsigned int width, unsigned int height, unsigned int channels = 3);
+        Bitmap(unsigned int width, unsigned int height);
+        virtual void initialize(unsigned int width, unsigned int height);
         //to get the sdl surface of the image
         SDL_Surface* getSurface();
         //to clear out the image to one single shade of colour
         void clear(char shade);
         //changing colour of single pixel based on specified location of the pixel
-        void drawPixel(int x, int y, char r, char g, char b);
+        void drawPixel(int x, int y, Colour colour);
         //to generate a noisy image
         void generateNoise();
         //for drawing pixel from a defined texture map
         void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap &src);
 
-        void getPixel(int x, int y, char &r, char &g, char &b);
+        void getPixel(int x, int y, Colour &colour);
 
-        char getComponent(int index) { return m_components[index];}
+        Colour getComponent(int index) { return m_components[index];}
 
         Bitmap getResizedBitmap(int width, int height);
         void getResizedBitmap(Bitmap &image);
@@ -49,7 +50,7 @@ class Bitmap
         unsigned int m_width;
         unsigned int m_height;
         unsigned int m_channels;
-        char *m_components;
+        Colour *m_components;
         SDL_Surface *m_image_surface;
 };
 

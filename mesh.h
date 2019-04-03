@@ -16,9 +16,11 @@ class Mesh
 {
     int no_of_positions;
     int no_of_texCoords;
+    int no_of_normals;
     int no_of_faces;
     vector<Vector4f> m_positions;
     vector<Vector4f> m_texCoords;
+    vector<Vector4f> m_normals;
     vector<Face> m_faces;
     bool is_initialized;
     char *m_file_name;
@@ -45,9 +47,11 @@ class Mesh
         Face getFace(int loc) { return m_faces[loc];}
         Vector4f getPosition(int loc) { return m_positions[loc];}
         Vector4f getTexCoord(int loc) { return m_texCoords[loc];}
+        Vector4f getNormal(int loc) { return m_normals[loc];}
         vector<Face> &getFaces() { return m_faces;}
         vector<Vector4f> &getPositions() { return m_positions;}
         vector<Vector4f> &getTexCoords() { return m_texCoords;}
+        vector<Vector4f> &getNormals() { return m_normals;}
         bool isInitialized() { return is_initialized;}
 
         virtual ~Mesh();
