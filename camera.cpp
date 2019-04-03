@@ -19,12 +19,13 @@ Matrix4f Camera::getViewProjection() {
 
 //to check
 void Camera::update(Input &input, float delta, float mov_amt) {
+    extern float mouse_sensitivity;
     int x, y;
     input.getMouseDifference(x, y);
     static int prev_x = 0;
     static int prev_y = 0;
-    float sensitivity_x = delta * 0.0001 * (abs(prev_x - x)) * 0.5;
-    float sensitivity_y = delta * 0.00005 * (abs(prev_y - y)) * 0.5;
+    float sensitivity_x = 0.0001 * (abs(prev_x - x)) * 0.5 * 50 * mouse_sensitivity;// * delta;
+    float sensitivity_y = 0.00005 * (abs(prev_y - y)) * 0.5 * 50 * mouse_sensitivity;// * delta;
 
     if(x < prev_x) {
         rotate(Y_AXIS, -sensitivity_x);

@@ -22,6 +22,7 @@ class Transform
         Transform(Vector4f pos, Quarternion rot, Vector4f scale);
 
         Transform setPos(Vector4f pos);
+        Transform setScale(Vector4f scale);
         Transform rotate(Quarternion rotation);
         Transform lookAt(Vector4f point, Vector4f up);
         Quarternion getLookAtRotation(Vector4f point, Vector4f up);

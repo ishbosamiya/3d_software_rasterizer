@@ -10,7 +10,7 @@
 
 #include "SDL.h"
 #include "colour.h"
-
+#include "vector4f.h"
 
 #include "stb_image.h"
 
@@ -18,12 +18,15 @@ using namespace std;
 
 class Bitmap
 {
+    char *m_file_name;
+
     public:
         Bitmap();
         Bitmap(const Bitmap &obj);
-        Bitmap(char *file_name);
+        Bitmap(char *m_file_name);
         Bitmap(unsigned int width, unsigned int height);
         virtual void initialize(unsigned int width, unsigned int height);
+        virtual void initialize(char *m_file_name);
         //to get the sdl surface of the image
         SDL_Surface* getSurface();
         //to clear out the image to one single shade of colour
@@ -35,7 +38,8 @@ class Bitmap
         //for drawing pixel from a defined texture map
         void copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap &src);
 
-        void getPixel(int x, int y, Colour &colour);
+        Colour getPixel(int x, int y);
+        Colour getPixel(Vector4f uv);
 
         Colour getComponent(int index) { return m_components[index];}
 

@@ -23,6 +23,8 @@ class RenderContext: public Bitmap
     void drawWire(Edge &edge, int thickness, char r, char g, char b);
     void clipPolygonComponent(vector<Vertex> &vertices, int component_index, float component_factor, vector<Vertex> &result);
     bool clipPolygonAxis(vector<Vertex> &vertices, vector<Vertex> &auxillary_vector, int component_index);
+    Vector4f barycentricCoords(Vector4f A, Vector4f B, Vector4f C, Vector4f &P);
+    Vector4f interpolation(Vector4f v1, Vector4f v2, Vector4f v3, Vector4f barycentric);
 
     float *m_z_buffer;
 

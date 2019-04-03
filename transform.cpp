@@ -18,6 +18,10 @@ Transform Transform::setPos(Vector4f pos) {
     return Transform(pos, m_rot, m_scale);
 }
 
+Transform Transform::setScale(Vector4f scale) {
+    return Transform(m_pos, m_rot, scale);
+}
+
 Transform Transform::rotate(Quarternion rotation) {
     return Transform(m_pos, rotation.mul(m_rot).normalized(), m_scale);
 }

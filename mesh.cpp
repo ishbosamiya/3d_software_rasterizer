@@ -161,19 +161,37 @@ bool Mesh::readMeshFromFile() {
 }
 
 void Mesh::calculateFlatNormals() {
+    vector<Vector4f> temp_normals;
+    temp_normals.reserve(no_of_faces);
+    for(int i = 0; i < m_faces.size(); i++) {
+        temp_normals.push_back(Vector4f(0, 0, 0, 0));
+    }
 
+    for(int i = 0; i < no_of_faces; i++) {
+        Vector4f p1 = getPosition(getFace(i).getPosition(1)).sub(getPosition(getFace(i).getPosition(0)));
+        Vector4f p2 = getPosition(getFace(i).getPosition(2)).sub(getPosition(getFace(i).getPosition(0)));
+        temp_normals[i] = p1.cross(p2);
+        m_faces.clear();
+        for(int j = 0; j < m_faces[i].getNumOfVerts(); j++) {
+            //need to add the index of the normal to each of the verts in the face
+        }
+    }
 }
 
 void Mesh::calculateSmoothNormals() {
     vector<Vector4f> temp_normals;
+    vector<int> temp_number;
     temp_normals.reserve(no_of_positions);
+    temp_number.reserve(no_of_positions);
     for(int i = 0; i < m_positions.size(); i++) {
         temp_normals.push_back(Vector4f(0, 0, 0, 0));
+        temp_number.push_back(1);
     }
 
     for(int i = 0; i < no_of_faces; i++) {
         for(int j = 0; j < m_faces[i].getNumOfVerts(); j++) {
             temp_normals[m_faces[i].getPosition(j)] = temp_normals[m_faces[i].getPosition(j)].add(m_positions[m_faces[i].getPosition(j)]);
+            temp_number[m_faces[i].getPosition(j)]++;
             m_faces[i].addNormal(j, m_faces[i].getPosition(j));
         }
     }
@@ -192,7 +210,7 @@ void Mesh::calculateSmoothNormals() {
         for(int j = 0; j < positions.size() - 2; j++) {
             Vector4f p1 = positions[j + 1].sub(positions[0]);
             Vector4f p2 = positions[j + 2].sub(positions[0]);
-            Vector4f n = p1.cross(p2);
+            Vector4f n = p1.cross(p2).normalized();
             temp_normals[positions_index[0]] = temp_normals[positions_index[0]].add(n);
             temp_normals[positions_index[j + 1]] = temp_normals[positions_index[j + 1]].add(n);
             temp_normals[positions_index[j + 2]] = temp_normals[positions_index[j + 2]].add(n);
@@ -203,11 +221,13 @@ void Mesh::calculateSmoothNormals() {
     }
 
     for(int i = 0; i < temp_normals.size(); i++) {
-        temp_normals[i] = temp_normals[i].normalized();
+        //temp_normals[i] = temp_normals[i].normalized();
+        temp_normals[i] = temp_normals[i].div(temp_number[i]);
     }
 
     m_normals_smooth = temp_normals;
     temp_normals.clear();
+    temp_number.clear();
 }
 
 template <typename T>

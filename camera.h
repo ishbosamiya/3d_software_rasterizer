@@ -22,10 +22,10 @@ class Camera
     int m_width;
     int m_height;
 
-    Transform getTransform() { return m_transform;}
-
     public:
         Camera(Matrix4f projection, int width, int height);
+
+        Transform getTransform() { return m_transform;}
 
         Matrix4f getViewProjection();
         void update(Input &input, float delta, float mov_amt);

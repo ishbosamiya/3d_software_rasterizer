@@ -15,17 +15,21 @@
 #include "shader.h"
 using namespace std;
 
-const float resolution_factor = 0.6;
-const int width = 1280 * resolution_factor;
-const int height = 720 * resolution_factor;
+const float resolution_factor = 1.5;
+int width = 1280 * resolution_factor;
+int height = 720 * resolution_factor;
+float mouse_sensitivity = 1;
+
+Vector4f camera_position;
 
 float toRadians(float angle) {
     return angle * 3.141592653 / 180.0;
 }
 
 void drawText(Display &display, TTF_Font *font, SDL_Color text_colour);
-void int_to_string(int value, char *result);
+void int_to_string(int value, char *result, int base = 10);
 void float_to_string(float value, char *result);
+void getSettings();
 
 int main(int argc, char *argv[]) {
 //    Display temp_display("Temp Display", width, height);
@@ -50,6 +54,8 @@ int main(int argc, char *argv[]) {
 //        temp_display.renderImage(temp_bitmap);
 //        SDL_UpdateWindowSurface(temp_display.window);
 //    }
+
+    getSettings();
 
     float alpha = 0, beta = 20, gamma = 0;
     Shader::base_colour.fill(255, 255, 255);
@@ -84,6 +90,10 @@ int main(int argc, char *argv[]) {
     Mesh terrainMesh;
     terrainMesh.initialize("terrain0.obj");
     Transform terrain_transform(Vector4f(0.0, -1.0, 0.0, 1.0));
+    Mesh box;
+    box.initialize("cube.obj");
+    Transform box_transform(Vector4f(0, 0, 0, 1));
+    box_transform = box_transform.setScale(Vector4f(100, 100, 100, 1));
 
     bool draw_wireframe = false;
     bool draw_z_buffer = false;
@@ -146,7 +156,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         if(input.isPressed(KEY_1)) {
-            mesh = mesh_data[0].initialize("icosphere.obj");
+            mesh = mesh_data[0].initialize("icosphere3.obj");
         }
         if(input.isPressed(KEY_2)) {
             mesh = mesh_data[1].initialize("sphere_high.obj");
@@ -245,6 +255,7 @@ int main(int argc, char *argv[]) {
 
         //input.getMouseDifference(mouse_x, mouse_y);
         camera.update(input, delta, mov_amt);
+        camera_position = camera.getTransform().getPos();
 
         //Program Logic after this
         //basic display wiping
@@ -259,7 +270,8 @@ int main(int argc, char *argv[]) {
         else {
             display.render_context.drawMesh(*mesh, vp, transform_mesh.getTransformation(), texture, draw_wireframe, false);
         }
-        display.render_context.drawMesh(terrainMesh, vp, terrain_transform.getTransformation(), texture2, draw_wireframe, false);
+        //display.render_context.drawMesh(terrainMesh, vp, terrain_transform.getTransformation(), texture2, draw_wireframe, false);
+        display.render_context.drawMesh(box, vp, box_transform.getTransformation(), texture, draw_wireframe, false);
 
         //depth map displaying
         Bitmap z_buffer = display.render_context.getNormalizedZBuffer();
@@ -401,21 +413,43 @@ void float_to_string(float value, char *result) {
     fin.close();
 }
 
-void int_to_string(int value, char *result) {
-    char temp[32];
-    int iterator = 0;
-    while(value>0) {
-        temp[iterator] = value % 10 + (int)'0';
-        value /= 10;
-        iterator++;
+void int_to_string(int value, char *result, int base) {
+   char temp[32];
+   int iterator = 0;
+   while(value>0) {
+       temp[iterator] = value % base + (int)'0';
+       if(temp[iterator] > '9') {
+	   	temp[iterator] += 'a' - '9' - 1;
+	   }
+       value /= base;
+       iterator++;
+   }
+   temp[iterator] = '\0';
+   result[iterator] = '\0';
+   iterator--;
+   int reverse_iterator = 0;
+   while(iterator >= 0) {
+       result[reverse_iterator] = temp[iterator];
+       reverse_iterator++;
+       iterator--;
+   }
+}
+
+void getSettings() {
+    ifstream fin;
+    fin.open("settings.txt");
+    if(!fin.is_open()) {
+        cout << "Could Not Find Settings File, Creating New One" << endl;
+        ofstream fout;
+        fout.open("settings.txt");
+        fout << width << endl;
+        fout << height << endl;
+        fout << mouse_sensitivity << endl;
+        fout.close();
+        return;
     }
-    temp[iterator] = '\0';
-    result[iterator] = '\0';
-    iterator--;
-    int reverse_iterator = 0;
-    while(iterator >= 0) {
-        result[reverse_iterator] = temp[iterator];
-        reverse_iterator++;
-        iterator--;
-    }
+    fin >> width;
+    fin >> height;
+    fin >> mouse_sensitivity;
+    fin.close();
 }

@@ -2,6 +2,11 @@
 
 using namespace std;
 
+Vertex Triangle_A;
+Vertex Triangle_B;
+Vertex Triangle_C;
+
+
 RenderContext::RenderContext() {
     //ctorz_buffer.getResizedBitmap(z_buffer_display.getWidth(), z_buffer_display.getHeight())
 }
@@ -26,6 +31,21 @@ void RenderContext::clearDepthBuffer() {
 void RenderContext::initialize(unsigned int width, unsigned int height) {
     Bitmap::initialize(width, height);
     m_z_buffer = new float[width*height];
+}
+
+Vector4f RenderContext::barycentricCoords(Vector4f A, Vector4f B, Vector4f C, Vector4f &P) {
+    Vector4f result;
+
+    Vector4f area = B.sub(A).cross(C.sub(A));
+    float area_f = area.dot(area);
+    float PBC = area.dot(B.sub(P).cross(C.sub(P)));
+    float PCA = area.dot(C.sub(P).cross(A.sub(P)));
+
+    result.setX(PBC/area_f);
+    result.setY(PCA/area_f);
+    result.setZ(1.0 - result.getX() - result.getY());
+
+    return result;
 }
 
 void RenderContext::drawMesh(Mesh &mesh, Matrix4f view_projection, Matrix4f transform, Bitmap &texture, bool wireframe, bool back_face_culling) {
@@ -202,8 +222,6 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
 void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &texture, bool back_face_culling) {
     //randomly assigning values to the min, mid and max vertices
     //will later be sorted for the correct order
-    //adding the perspective transforms to the triangle vertices
-    //cout << "fill triangle" << endl;
     Shader shader;
 
     bool use_surface_normals = false;
@@ -227,6 +245,14 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
             return;
         }
     }
+
+//    Triangle_A = minYVert.getPosition();
+//    Triangle_B = midYVert.getPosition();
+//    Triangle_C = maxYVert.getPosition();
+
+    Triangle_A = minYVert;
+    Triangle_B = midYVert;
+    Triangle_C = maxYVert;
 
     //Sorting the vertices
     if(maxYVert.getY() < midYVert.getY()) {
@@ -336,11 +362,12 @@ void RenderContext::drawScanLine(Gradients &gradients, Edge &left, Edge &right, 
             int src_Y = (int)((texCoordY * z) * (texture.getHeight() - 1) + 0.5f);
 
             Colour colour;
-            texture.getPixel(src_X, src_Y, colour);
+            colour = texture.getPixel(src_X, src_Y);
             Vector4f bar;
-            bar.setX(i);
-            bar.setY(j);
-            bool success = shader->fragmentShader(bar, colour);
+            Vector4f screen_coords(i, j, 0);
+            bar = barycentricCoords(Triangle_A.getPosition(), Triangle_B.getPosition(), Triangle_C.getPosition(), screen_coords);
+
+            bool success = shader->fragmentShader(screen_coords, bar, colour);
             if(success) {
                 drawPixel(i, j, colour);
             }
@@ -357,6 +384,15 @@ void RenderContext::drawScanLine(Gradients &gradients, Edge &left, Edge &right, 
         texCoordY += texCoordY_XStep;
         depth += depth_x_step;
     }
+}
+
+Vector4f RenderContext::interpolation(Vector4f v1, Vector4f v2, Vector4f v3, Vector4f barycentric) {
+    Vector4f result;
+    v1 = v1.mul(barycentric.getX());
+    v2 = v2.mul(barycentric.getY());
+    v3 = v3.mul(barycentric.getZ());
+    result = v1.add(v2.add(v3));
+    return result;
 }
 
 void RenderContext::fillWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling) {
@@ -517,34 +553,54 @@ Bitmap RenderContext::getNormalizedZBuffer() {
     return result;
 }
 
+//void RenderContext::getNormalizedZBuffer(Bitmap &image) {
+//    float min = std::numeric_limits<float>::max();
+//    float max = std::numeric_limits<float>::min();
+//    float temp_max = std::numeric_limits<float>::max();
+//    for(int i = 0; i < m_width*m_height; i++) {
+//        if(min > m_z_buffer[i]) {
+//            min = m_z_buffer[i];
+//        }
+//        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
+//            max = m_z_buffer[i];
+//        }
+//    }
+//    max += 0.001;
+//    //std::cout << "Min: " << min << std::endl;
+//    for(int i = 0; i < m_width; i++) {
+//        for(int j = 0; j < m_height; j++) {
+//            float value = m_z_buffer[i + j*m_width];
+//            float relative = 0;
+//            if(max != min && value != temp_max) {
+//                relative = (1.0 - ((value - min)/(max - min)));
+//            }
+//            if(value == temp_max) {
+//                relative = 0;
+//            }
+//            char colour = relative * 255;
+//            Colour temp_colour;
+//            temp_colour.fill(colour);
+//            image.drawPixel(i, j, temp_colour);
+//        }
+//    }
+//}
+
 void RenderContext::getNormalizedZBuffer(Bitmap &image) {
-    float min = std::numeric_limits<float>::max();
-    float max = std::numeric_limits<float>::min();
-    float temp_max = std::numeric_limits<float>::max();
-    for(int i = 0; i < m_width*m_height; i++) {
-        if(min > m_z_buffer[i]) {
-            min = m_z_buffer[i];
-        }
-        if(max < m_z_buffer[i] && m_z_buffer[i] != temp_max) {
-            max = m_z_buffer[i];
-        }
-    }
-    max += 0.001;
-    //std::cout << "Min: " << min << std::endl;
-    for(int i = 0; i < m_width; i++) {
-        for(int j = 0; j < m_height; j++) {
-            float value = m_z_buffer[i + j*m_width];
-            float relative = 0;
-            if(max != min && value != temp_max) {
-                relative = (1.0 - ((value - min)/(max - min)));
+    float max = std::numeric_limits<float>::max();
+    for(int x = 0; x < m_width; x++) {
+        for(int y = 0; y < m_height; y++) {
+            float value = m_z_buffer[x + y * m_width];
+            if(value != max) {
+                Colour temp_colour;
+                temp_colour.fill(255);
+                temp_colour.multiply(1.0 - value);
+                image.drawPixel(x, y, temp_colour);
             }
-            if(value == temp_max) {
-                relative = 0;
+            else {
+                Colour temp_colour;
+                temp_colour.fill(0);
+                image.drawPixel(x, y, temp_colour);
             }
-            char colour = relative * 255;
-            Colour temp_colour;
-            temp_colour.fill(colour);
-            image.drawPixel(i, j, temp_colour);
         }
     }
 }

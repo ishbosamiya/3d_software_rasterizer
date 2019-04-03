@@ -2,6 +2,12 @@
 #include <stdlib.h>
 
 Bitmap::Bitmap() {
+    m_width = 0;
+    m_height = 0;
+    m_channels = 0;
+    m_components = nullptr;
+    m_image_surface = NULL;
+    m_file_name = nullptr;
 }
 
 Bitmap::Bitmap(const Bitmap &obj) {
@@ -13,6 +19,7 @@ Bitmap::Bitmap(const Bitmap &obj) {
         m_components[i] = obj.m_components[i];
     }
     m_image_surface = obj.m_image_surface;
+    m_file_name = nullptr;
 }
 
 Bitmap::Bitmap(unsigned int width, unsigned int height) {
@@ -55,72 +62,35 @@ Uint32 Bitmap::getPixel32( SDL_Surface *surface, int x, int y ) {
     return value;
 }
 
-//Bitmap::Bitmap(char *file_name) {
-//    SDL_Surface *image = SDL_LoadBMP(file_name);
-//    if(image == NULL) {
-//        cout << "Could Not Load Image!!!" << endl;
-//        initialize(512, 512);
-//        generateNoise();
-//        return;
-//    }
-//    m_image_surface = image;
-//
-//    m_width = image->w;
-//    m_height = image->h;
-//    cout << "width: " << m_width << endl;
-//    cout << "height: " << m_height << endl;
-//
-//    m_components = new Colour[m_width * m_height];
-//    SDL_LockSurface(image);
-//
-//    //Uint32 *pixels = (Uint32 *)image->pixels;
-//    Uint32 *pixels = (Uint32 *)m_image_surface->pixels;
-//    cout << pixels[m_width * m_height - 2501] << endl;
-//
-//    //copy_n(pixels, m_width * m_height, (Uint32 *)m_components);
-//    //memcpy((void *)m_components, (void *)pixels, m_width * m_height);
-//    memcpy((void *)m_components, (void *)pixels, m_width * m_height * sizeof(*m_components));
-////    for(int i = 0; i < m_width * m_height; i++) {
-////        m_components[i].packed = pixels[i];
-////    }
-//
-//    //storing as ppm
-//    char *temp = new char[1000];
-//    strcpy(temp, file_name);
-//    strcat(temp, ".ppm");
-//    ofstream fout;
-//    fout.open(temp);
-//    fout << "P3" << endl;
-//    fout << m_width << " " << m_height << endl;
-//    fout << "255" << endl;
-//    for(int y = 0; y < m_height; y++) {
-//        for(int x = 0; x < m_width; x++) {
-//            int index = x + y * m_width;
-//            fout << (int)m_components[index].r << " ";
-//            fout << (int)m_components[index].g << " ";
-//            fout << (int)m_components[index].b << " ";
-//        }
-//        fout << endl;
-//    }
-//
-//    fout.close();
-//    fout.open("temp_data.txt");
-//    for(int i = 0; i < m_width * m_height; i++) {
-//        long int component_temp;
-//        memcpy(&component_temp, &m_components[i], sizeof(long int));
-//        bitset<32> p(component_temp);
-//        fout << p << endl;
-//    }
-//
-//    m_channels = 4;
-//    cout << "Image has been Loaded" << endl;
-//
-//    SDL_UnlockSurface(image);
-//}
-
 Bitmap::Bitmap(char *file_name) {
+
+    initialize(file_name);
+}
+
+void Bitmap::initialize(char *file_name) {
+    m_width = 0;
+    m_height = 0;
+    m_channels = 0;
+    m_components = nullptr;
+    m_image_surface = NULL;
+    m_file_name = nullptr;
+
+    if(m_width > 0) {
+        m_width = 0;
+        m_height = 0;
+        m_channels = 0;
+        delete [] m_components;
+        m_components = nullptr;
+        SDL_FreeSurface(m_image_surface);
+        m_image_surface = NULL;
+        delete [] m_file_name;
+        m_file_name = nullptr;
+    }
+
     unsigned char *pixels = stbi_load(file_name, &m_width, &m_height, &m_channels, STBI_rgb_alpha);
     m_channels = STBI_rgb_alpha;
+
+    this->m_file_name = file_name;
 
     if(!pixels) {
         cout << "Image Could Not Be Loaded" << endl;
@@ -142,35 +112,6 @@ Bitmap::Bitmap(char *file_name) {
     delete [] pixels;
 }
 
-//Bitmap::Bitmap(char *file_name) {
-//    have_surface = true;
-//    SDL_Surface *image = SDL_LoadBMP(file_name);
-//    if(image == NULL) {
-//        cout << "Could Not Load Image!!!" << endl;
-//        initialize(32, 32, 3);
-//        generateNoise();
-//        return;
-//    }
-//    m_image_surface = image; //SDL_ConvertSurface(image, gSceenSurface->format, NULL);
-//
-//    m_width = image->w;
-//    m_height = image->h;
-//    m_channels = 3;
-//
-//    m_components = new char[m_width * m_height * m_channels];
-//
-//    for(int x = 0; x < m_width; x++) {
-//        for(int y = 0; y < m_height; y++) {
-//            unsigned char r, g, b;
-//            SDL_GetRGB(getPixel32(m_image_surface, x, y), m_image_surface->format, &r, &g, &b);
-//            drawPixel(x, y, r, g, b);
-//            cout << "Image Loaded" << endl;
-//        }
-//    }
-//
-//    have_surface = true;
-//}
-
 void Bitmap::initialize(unsigned int width, unsigned int height) {
     //basic initialization of the values
     m_width = width;
@@ -178,6 +119,7 @@ void Bitmap::initialize(unsigned int width, unsigned int height) {
     m_channels = 4;
     m_components = new Colour[m_width * m_height];
     m_image_surface = NULL;
+    m_file_name = nullptr;
 }
 
 SDL_Surface* Bitmap::getSurface() {
@@ -217,9 +159,26 @@ void Bitmap::copyPixel(int dest_X, int dest_Y, int src_X, int src_Y, Bitmap &src
     m_components[destIndex] = src.getComponent(srcIndex);
 }
 
-void Bitmap::getPixel(int x, int y, Colour &colour) {
+Colour Bitmap::getPixel(int x, int y) {
+//    if(x > m_width || y > m_height || x < 0 || y < 0) {
+//        Colour pink;
+//        pink.fill(255, 0, 255);
+//        return pink;
+//    }
+    if(x < 0) {
+        x *= -1;
+    }
+    if(y < 0) {
+        y *= -1;
+    }
+    x = x % m_width;
+    y = y % m_height;
     int index = (x + y * m_width);
-    colour = m_components[index];
+    return m_components[index];
+}
+
+Colour Bitmap::getPixel(Vector4f uv) {
+    return getPixel(uv.getX() * m_width, uv.getY() * m_height);
 }
 
 void Bitmap::generateNoise() {
@@ -239,4 +198,5 @@ void Bitmap::generateNoise() {
 Bitmap::~Bitmap() {
     delete [] m_components;
     SDL_FreeSurface(m_image_surface);
+    delete [] m_file_name;
 }
