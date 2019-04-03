@@ -10,10 +10,11 @@
 #include "camera.h"
 #include "input.h"
 #include "SDL_ttf.h"
+#include "shader.h"
 using namespace std;
 
-const int width = 1280 * 0.9;
-const int height = 720 * 0.9;
+const int width = 1280 * 0.3;
+const int height = 720 * 0.3;
 
 float toRadians(float angle) {
     return angle * 3.141592653 / 180.0;
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
 //        SDL_UpdateWindowSurface(temp_display.window);
 //    }
 
+    float alpha = 0, beta = 20, gamma = 0;
 
     //For Text On Screen
     TTF_Init();
@@ -72,8 +74,9 @@ int main(int argc, char *argv[]) {
 
     Mesh *mesh;
     Mesh mesh_data[9];
-    mesh = mesh_data[2].initialize("monkey0.obj");
-    Transform transform_mesh(Vector4f(0.0, 0.0, 3.0, 1.0));
+    //mesh = mesh_data[2].initialize("monkey0.obj");
+    mesh = mesh_data[2].initialize("monkey0_smooth.obj");
+    Transform transform_mesh(Vector4f(0.0, 0.0, 0.0, 1.0));
     Mesh terrainMesh;
     terrainMesh.initialize("terrain0.obj");
     Transform terrain_transform(Vector4f(0.0, -1.0, 0.0, 1.0));
@@ -89,7 +92,7 @@ int main(int argc, char *argv[]) {
     projection.initPerspective(toRadians(70.0), (float)display.render_context.getWidth()/(float)display.render_context.getHeight(), 0.1, 1000.0);
     Camera camera(projection, width, height);
     camera.rotate(Vector4f(0, 1, 0, 1), toRadians(180));
-    camera.move(Vector4f(0, 0, -1, 1), -7);
+    camera.move(Vector4f(0, 0, -1, 1), -3);
 
     //test code for rotation of triangle
     bool rotation_check = false;
@@ -102,7 +105,7 @@ int main(int argc, char *argv[]) {
     int mouse_y = 0;
     SDL_ShowCursor(SDL_DISABLE);
     SDL_CaptureMouse(SDL_TRUE);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(display.window, display.getWidth() / 2, display.getHeight() / 2);
     Input input(&display);
     float standard_mov_amt = 5.0 * 0.0002;
@@ -213,6 +216,15 @@ int main(int argc, char *argv[]) {
         if(input.isPressed(KEY_T)) {
             draw_help = !draw_help;
         }
+        //for the lighting
+        if(input.isPressed(KEY_K)) {
+            beta += 5;
+        }
+        if(input.isPressed(KEY_I)) {
+            beta -= 5;
+        }
+
+
         input.getMouseDifference(mouse_x, mouse_y);
         camera.update(input, delta, mouse_x, mouse_y, mov_amt);
 
@@ -247,11 +259,15 @@ int main(int argc, char *argv[]) {
         SDL_UpdateWindowSurface(display.window);
         SDL_UpdateWindowSurface(z_buffer_display.window);
         step++;
+        SDL_FreeSurface(text_fps_surface);
+        alpha += 15;
+        gamma = 90 - alpha;
+        Shader::light_dir.initialize(cos(toRadians(alpha)), cos(toRadians(beta)), cos(toRadians(gamma)));
     }
 }
 
 void drawText(Display &display, TTF_Font *font, SDL_Color text_colour) {
-    int no_of_textBoxes = 9;
+    int no_of_textBoxes = 10;
     SDL_Surface *textSurface[no_of_textBoxes];
     for(int i = 0; i < no_of_textBoxes; i++) {
         textSurface[i] = NULL;
@@ -290,6 +306,9 @@ void drawText(Display &display, TTF_Font *font, SDL_Color text_colour) {
 
     textSurface[8] = TTF_RenderText_Blended(font, "T TO Toggle Help", text_colour);
     textLocation[8] = {0.45 * window_size_x, 0.27 * window_size_y, 0, 0};
+
+    textSurface[8] = TTF_RenderText_Blended(font, "K and I To Turn Light", text_colour);
+    textLocation[8] = {0.448 * window_size_x, 0.15 * window_size_y, 0, 0};
 
     // Pass zero for width and height to draw the whole surface
     for(int i = 0; i < no_of_textBoxes; i++) {

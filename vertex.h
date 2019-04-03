@@ -22,6 +22,7 @@ class Vertex
         Vector4f getPosition() {return m_pos;}
         Vector4f getTexCoords() {return m_texCoords;}
         Vector4f getNormal() {return m_normal;}
+        void setNormal(Vector4f normal) {m_normal = normal;}
         float triangleArea(Vertex b, Vertex c);
         Vertex transform(Matrix4f transform_);
         Vertex perspectiveDivide();

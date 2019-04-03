@@ -5,10 +5,13 @@ Input::Input(Display *display) {
     for(int i = 0; i < KEY_COUNT; i++) {
         m_key_pressed[i] = false;
     }
-    mouse_x = 0;
-    mouse_y = 0;
-    mouse_prev_x = SDL_WINDOWPOS_CENTERED;
-    mouse_prev_y = SDL_WINDOWPOS_CENTERED;
+//    mouse_x = 0;
+//    mouse_y = 0;
+    mouse_prev_x = 250;
+    mouse_prev_y = 250;
+    SDL_WarpMouseGlobal(mouse_prev_x, mouse_prev_y);
+    mouse_x = mouse_prev_x;
+    mouse_y = mouse_prev_y;
     mouse_diff_x = 0;
     mouse_diff_y = 0;
     this->display = NULL;
@@ -16,16 +19,19 @@ Input::Input(Display *display) {
 }
 
 void Input::event(SDL_Event &event, bool capture_mouse) {
-//    //SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
-//    SDL_GetMouseState(&mouse_x, &mouse_y);
-//    cout << "x: " << mouse_x << " y: " << mouse_y << endl;
-//    mouse_diff_x = mouse_x - mouse_prev_x;
-//    mouse_diff_y = mouse_y - mouse_prev_y;
-//    mouse_prev_x = mouse_x;
-//    mouse_prev_y = mouse_y;
-
     //this works
-    SDL_GetRelativeMouseState(&mouse_diff_x, &mouse_diff_y);
+    SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
+    if(capture_mouse) {
+        SDL_WarpMouseGlobal(mouse_prev_x, mouse_prev_y);
+    }
+    mouse_diff_x = mouse_x - mouse_prev_x;
+    mouse_diff_y = mouse_y - mouse_prev_y;
+    if(mouse_diff_x < 2 && mouse_diff_x > -2) {
+        mouse_diff_x = 0;
+    }
+    if(mouse_diff_y < 2 && mouse_diff_y > -2) {
+        mouse_diff_y = 0;
+    }
 
     const Uint8* key_state = SDL_GetKeyboardState(NULL);
     if(key_state[SDL_SCANCODE_0]) {

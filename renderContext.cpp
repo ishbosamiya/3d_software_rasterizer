@@ -100,7 +100,7 @@ bool RenderContext::clipPolygonAxis(vector<Vertex> &vertices, vector<Vertex> &au
 }
 
 void RenderContext::clipPolygonComponent(vector<Vertex> &vertices, int component_index, float component_factor, vector<Vertex> &result) {
-    Vertex previous_vertex = vertices[vertices.size() -1];
+    Vertex previous_vertex = vertices[vertices.size() - 1];
     float previous_component = previous_vertex.get(component_index) * component_factor;
     bool previous_inside = previous_component <= previous_vertex.getPosition().getW();
 
@@ -135,9 +135,9 @@ void RenderContext::drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
         fillTriangle(v1, v2, v3, texture, back_face_culling);
         return;
     }
-    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
-        return;
-    }
+//    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
+//        return;
+//    }
 
     vector<Vertex> vertices;
     vertices.reserve(6);
@@ -162,33 +162,6 @@ void RenderContext::drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
 }
 
 void RenderContext::drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char g, char b, int thickness, bool back_face_culling) {
-//    //if all inside then do not clip
-//    if(v1.isInsideViewFrustum() && v2.isInsideViewFrustum() && v3.isInsideViewFrustum()) {
-//        fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
-//        return;
-//    }
-////    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
-////        return;
-////    }
-//
-//    vector<Vertex> vertices;
-//    vertices.reserve(6);
-//    vector<Vertex> auxially_vector;
-//    auxially_vector.reserve(6);
-//
-//    vertices.push_back(v1);
-//    vertices.push_back(v2);
-//    vertices.push_back(v3);
-//
-//    if(clipPolygonAxis(vertices, auxially_vector, 0) &&
-//       clipPolygonAxis(vertices, auxially_vector, 1) &&
-//       clipPolygonAxis(vertices, auxially_vector, 2)) {
-//        Vertex initial_vertex = vertices[0];
-//        for(int i = 1; i < vertices.size() - 1; i++) {
-//            fillWireframe(initial_vertex, vertices[i], vertices[i + 1], r, g, b, thickness, back_face_culling);
-//        }
-//    }
-
     if(v1.isInsideViewFrustum() && v2.isInsideViewFrustum() & v3.isInsideViewFrustum()) {
         fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
         return;
@@ -235,11 +208,12 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
     //randomly assigning values to the min, mid and max vertices
     //will later be sorted for the correct order
     //adding the perspective transforms to the triangle vertices
-    Matrix4f screen_space_transform;
-    screen_space_transform.initScreenSpaceTransform(getWidth()/2.0, getHeight()/2.0);
-    Vertex minYVert = v1.transform(screen_space_transform).perspectiveDivide();
-    Vertex midYVert = v2.transform(screen_space_transform).perspectiveDivide();
-    Vertex maxYVert = v3.transform(screen_space_transform).perspectiveDivide();
+    //cout << "fill triangle" << endl;
+    Shader shader;
+
+    Vertex minYVert = shader.vertexShader(v1, 0, getWidth(), getHeight());
+    Vertex midYVert = shader.vertexShader(v2, 1, getWidth(), getHeight());
+    Vertex maxYVert = shader.vertexShader(v3, 2, getWidth(), getHeight());
 
     if(back_face_culling == true) {
         if(minYVert.triangleArea(maxYVert, midYVert) >= 0) {
@@ -275,22 +249,22 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
     }
 
     //rendering the triangle without using memory buffers
-    scanTriangle(minYVert, midYVert, maxYVert, handedness, texture);
+    scanTriangle(minYVert, midYVert, maxYVert, handedness, texture, &shader);
 }
 
-void RenderContext::scanTriangle(Vertex &minYVert, Vertex &midYVert, Vertex &maxYVert, bool handedness, Bitmap &texture) {
+void RenderContext::scanTriangle(Vertex &minYVert, Vertex &midYVert, Vertex &maxYVert, bool handedness, Bitmap &texture, Shader *shader) {
     Gradients gradients(minYVert, midYVert, maxYVert);
 
     Edge top_to_bottom(gradients, minYVert, maxYVert, 0);
     Edge top_to_middle(gradients, minYVert, midYVert, 0);
     Edge middle_to_bottom(gradients, midYVert, maxYVert, 1);
 
-    scanEdges(gradients, top_to_bottom, top_to_middle, handedness, texture);
-    scanEdges(gradients, top_to_bottom, middle_to_bottom, handedness, texture);
+    scanEdges(gradients, top_to_bottom, top_to_middle, handedness, texture, shader);
+    scanEdges(gradients, top_to_bottom, middle_to_bottom, handedness, texture, shader);
 }
 
 //getting information for (horizontal) lines from edge to edge
-void RenderContext::scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture) {
+void RenderContext::scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture, Shader *shader) {
     //making sure that the left and right edges are on their correct sides
     Edge left = a;
     Edge right = b;
@@ -320,13 +294,13 @@ void RenderContext::scanEdges(Gradients &gradients, Edge &a, Edge &b, bool hande
 
     //sending data to render the horizontal line
     for(int i = y_start; i < y_end; i++) {
-        drawScanLine(gradients, left, right, i, texture);
+        drawScanLine(gradients, left, right, i, texture, shader);
         left.step();
         right.step();
     }
 }
 
-void RenderContext::drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture) {
+void RenderContext::drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture, Shader *shader) {
     //basic sweep render of all the pixels between the starting x coordinate and the ending x coordinate
     int x_min = ceil(left.getX());
     int x_max = ceil(right.getX());
@@ -354,9 +328,23 @@ void RenderContext::drawScanLine(Gradients &gradients, Edge &left, Edge &right, 
             int src_X = (int)((texCoordX * z) * (texture.getWidth() - 1) + 0.5f);
             int src_Y = (int)((texCoordY * z) * (texture.getHeight() - 1) + 0.5f);
 
-            copyPixel(i, j, src_X, src_Y, texture);
-        }
+            Colour colour;
+            texture.getPixel(src_X, src_Y, colour);
+            Vector4f bar;
+            bar.setX(i);
+            bar.setY(j);
+            bool success = shader->fragmentShader(bar, colour);
+            if(success) {
+                drawPixel(i, j, colour);
+            }
+            else {
+                Colour pink;
+                pink.fill(255, 0, 255);
+                drawPixel(i, j, pink);
+            }
 
+            //copyPixel(i, j, src_X, src_Y, texture);
+        }
         one_over_z += one_over_z_XStep;
         texCoordX += texCoordX_XStep;
         texCoordY += texCoordY_XStep;

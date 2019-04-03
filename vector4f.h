@@ -48,6 +48,7 @@ class Vector4f
         void setZ(float value);
         void setW(float value);
         Vector4f returnThis();
+        Vector4f invert();
         bool operator == (Vector4f r);
         ~Vector4f();
 

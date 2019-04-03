@@ -13,12 +13,13 @@
 #include "edge.h"
 #include "gradients.h"
 #include "mesh.h"
+#include "shader.h"
 
 class RenderContext: public Bitmap
 {
-    void scanTriangle(Vertex &minYVert, Vertex &midYVert, Vertex &maxYVert, bool handedness, Bitmap &texture);
-    void scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture);
-    void drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture);
+    void scanTriangle(Vertex &minYVert, Vertex &midYVert, Vertex &maxYVert, bool handedness, Bitmap &texture, Shader *shader);
+    void scanEdges(Gradients &gradients, Edge &a, Edge &b, bool handedness, Bitmap &texture, Shader *shader);
+    void drawScanLine(Gradients &gradients, Edge &left, Edge &right, int j, Bitmap &texture, Shader *shader);
     void drawWire(Edge &edge, int thickness, char r, char g, char b);
     void clipPolygonComponent(vector<Vertex> &vertices, int component_index, float component_factor, vector<Vertex> &result);
     bool clipPolygonAxis(vector<Vertex> &vertices, vector<Vertex> &auxillary_vector, int component_index);

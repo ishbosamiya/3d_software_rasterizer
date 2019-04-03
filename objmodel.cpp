@@ -44,7 +44,7 @@ void OBJModel::initialize(char *file_name) {
             float position2;
             float position3;
             fin >> position1 >> position2 >> position3;
-            addElement(m_normals, Vector4f(position1, position2, position3, 1));
+            addElement(m_normals, Vector4f(position1, position2, position3, 0));
             m_has_normals = true;
         }
         else if(type[0] == 'f' && type[1] == '\0') {

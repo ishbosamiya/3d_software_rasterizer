@@ -2,6 +2,7 @@
 #define COLOUR_H
 
 #include <iostream>
+#include "vector4f.h"
 
 using namespace std;
 
@@ -36,6 +37,11 @@ union Colour {
         r *= value;
         g *= value;
         b *= value;
+    }
+    void multiply(Vector4f value) {
+        r *= value.getX();
+        g *= value.getY();
+        b *= value.getZ();
     }
 };
 
