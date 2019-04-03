@@ -67,12 +67,13 @@ class Input
     int mouse_y;
     int mouse_prev_x;
     int mouse_prev_y;
+    int mouse_diff_x;
+    int mouse_diff_y;
     Display *display;
     public:
         Input(Display *display);
         void event(SDL_Event &event, bool capture_mouse);
-        void getMouse(int &x, int &y) { x = mouse_x; y = mouse_y;}
-        void getMouseDifference(int &x, int &y) { x = mouse_x - mouse_prev_x; y = mouse_y - mouse_prev_y;}
+        void getMouseDifference(int &x, int &y) { x = mouse_diff_x; y = mouse_diff_y;}
         void pressKey(int key) { m_key_pressed[key] = true;}
         void unpressKey(int key) { m_key_pressed[key] = false;}
         bool isPressed(int key) { return m_key_pressed[key];}

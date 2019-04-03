@@ -5,31 +5,27 @@ Input::Input(Display *display) {
     for(int i = 0; i < KEY_COUNT; i++) {
         m_key_pressed[i] = false;
     }
-    mouse_prev_x = 0;
-    mouse_prev_y = 0;
     mouse_x = 0;
     mouse_y = 0;
+    mouse_prev_x = SDL_WINDOWPOS_CENTERED;
+    mouse_prev_y = SDL_WINDOWPOS_CENTERED;
+    mouse_diff_x = 0;
+    mouse_diff_y = 0;
+    this->display = NULL;
     this->display = display;
 }
 
 void Input::event(SDL_Event &event, bool capture_mouse) {
-    SDL_PumpEvents();
+//    //SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
+//    SDL_GetMouseState(&mouse_x, &mouse_y);
+//    cout << "x: " << mouse_x << " y: " << mouse_y << endl;
+//    mouse_diff_x = mouse_x - mouse_prev_x;
+//    mouse_diff_y = mouse_y - mouse_prev_y;
+//    mouse_prev_x = mouse_x;
+//    mouse_prev_y = mouse_y;
 
-    SDL_GetMouseState(&mouse_x, &mouse_y);
-    if(capture_mouse) {
-        if(mouse_x >= display->getWidth() - 1) {
-            SDL_WarpMouseInWindow(display->window, 5, mouse_y);
-        }
-        else if(mouse_x <= 1) {
-            SDL_WarpMouseInWindow(display->window, display->getWidth() - 5, mouse_y);
-        }
-        if(mouse_y >= display->getHeight() - 1) {
-            SDL_WarpMouseInWindow(display->window, mouse_x, 5);
-        }
-        else if(mouse_y <= 1) {
-            SDL_WarpMouseInWindow(display->window, mouse_x, display->getHeight() - 5);
-        }
-    }
+    //this works
+    SDL_GetRelativeMouseState(&mouse_diff_x, &mouse_diff_y);
 
     const Uint8* key_state = SDL_GetKeyboardState(NULL);
     if(key_state[SDL_SCANCODE_0]) {
@@ -299,13 +295,11 @@ void Input::event(SDL_Event &event, bool capture_mouse) {
         m_key_pressed[KEY_SHIFT] = false;
     }
 
-    mouse_prev_x = mouse_x;
-    mouse_prev_y = mouse_y;
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
 }
 
 
 
 Input::~Input() {
-    //dtor
+    delete [] m_key_pressed;
 }
