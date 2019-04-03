@@ -9,17 +9,11 @@ Vector4f::Vector4f()
 }
 
 Vector4f::Vector4f(float x, float y, float z) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = 0;
+    initialize(x, y, z);
 }
 
 Vector4f::Vector4f(float x, float y, float z, float w) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = w;
+    initialize(x, y, z, w);
 }
 
 void Vector4f::initialize(float x, float y, float z) {

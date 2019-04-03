@@ -35,7 +35,9 @@ class Face
         vector<int> getTexCoords() { return m_texCoords;}
 
         void addNormal(int normal_index) { m_normals.push_back(normal_index);}
+        void addNormal(int loc, int normal_index) { m_normals[loc] = normal_index;}
         int getNormal(int loc) { return m_normals[loc];}
+        void setNormals(vector<int> normals) { m_normals = normals;}
         vector<int> getNormals() { return m_normals;}
 
         void printNormalIndices();

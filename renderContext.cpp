@@ -37,8 +37,8 @@ void RenderContext::drawMesh(Mesh &mesh, Matrix4f view_projection, Matrix4f tran
         for(int j = 0; j < no_of_verts; j++) {
             Vector4f position = mesh.getPosition(mesh.getFace(i).getPosition(j));
             Vector4f texCoord = mesh.getTexCoord(mesh.getFace(i).getTexCoord(j));
-            Vector4f normal = mesh.getNormal(mesh.getFace(i).getNormal(j));
-            Vertex temp_vert(position, texCoord, normal);
+            Vector4f normal = mesh.getNormalSmooth(mesh.getFace(i).getNormal(j));
+            Vertex temp_vert(position, texCoord, normal, normal);
             verts.push_back(temp_vert.transform(mvp, transform));
         }
         //here I can make the wireframe not have the triangle, but for the rasterizer I need to make them into triangles
@@ -136,9 +136,6 @@ void RenderContext::drawTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
         fillTriangle(v1, v2, v3, texture, back_face_culling);
         return;
     }
-//    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
-//        return;
-//    }
 
     vector<Vertex> vertices;
     vertices.reserve(6);
@@ -167,9 +164,6 @@ void RenderContext::drawWireframe(Vertex v1, Vertex v2, Vertex v3, char r, char 
         fillWireframe(v1, v2, v3, r, g, b, thickness, back_face_culling);
         return;
     }
-//    if(!v1.isInsideViewFrustum() && !v2.isInsideViewFrustum() && !v3.isInsideViewFrustum()) {
-//        return;
-//    }
 
     vector<Vertex> vertices;
     vertices.reserve(6);
@@ -219,9 +213,9 @@ void RenderContext::fillTriangle(Vertex v1, Vertex v2, Vertex v3, Bitmap &textur
 
         Vector4f normal = p2.cross(p1).normalized();
 
-        v1.setNormal(normal);
-        v2.setNormal(normal);
-        v3.setNormal(normal);
+        v1.setNormalSmooth(normal);
+        v2.setNormalSmooth(normal);
+        v3.setNormalSmooth(normal);
     }
 
     Vertex minYVert = shader.vertexShader(v1, 0, getWidth(), getHeight());

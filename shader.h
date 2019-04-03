@@ -12,6 +12,10 @@
 
 using namespace std;
 
+float saturate(float intensity);
+float addAmbientFactor(float intensity, float ambient_factor);
+float contrast(float intensity, float factor);
+
 class Shader
 {
     Vector4f normals[3];
@@ -20,6 +24,8 @@ class Shader
         static Vector4f light_dir;
         static int shader_type;
         static int no_of_shaders;
+        static float ambient_factor;
+        static Colour base_colour;
 
         virtual Vertex vertexShader(Vertex vertex, int nth_vertex, int width, int height);
         virtual bool fragmentShader(Vector4f bar, Colour &colour);

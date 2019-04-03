@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION //needed for stb_image
+
 #include <iostream>
 
 #include "display.h"
@@ -13,8 +15,9 @@
 #include "shader.h"
 using namespace std;
 
-const int width = 1280 * 0.3;
-const int height = 720 * 0.3;
+const float resolution_factor = 0.6;
+const int width = 1280 * resolution_factor;
+const int height = 720 * resolution_factor;
 
 float toRadians(float angle) {
     return angle * 3.141592653 / 180.0;
@@ -26,7 +29,7 @@ void float_to_string(float value, char *result);
 
 int main(int argc, char *argv[]) {
 //    Display temp_display("Temp Display", width, height);
-//    Bitmap temp_bitmap("image2.bmp");
+//    Bitmap temp_bitmap("image.bmp");
 //    SDL_Event temp_event;
 //    while(true) {
 //        if(SDL_PollEvent(&temp_event)) {
@@ -49,6 +52,7 @@ int main(int argc, char *argv[]) {
 //    }
 
     float alpha = 0, beta = 20, gamma = 0;
+    Shader::base_colour.fill(255, 255, 255);
 
     //For Text On Screen
     TTF_Init();
@@ -71,6 +75,7 @@ int main(int argc, char *argv[]) {
     texture.generateNoise();
     Bitmap texture2(8, 8);
     texture2.generateNoise();
+    Bitmap frank_tex("frank_DIF.png");
 
     Mesh *mesh;
     Mesh mesh_data[9];
@@ -115,15 +120,6 @@ int main(int argc, char *argv[]) {
         unsigned long long int current_time = SDL_GetTicks();
         double delta = current_time - previous_time;
         previous_time = current_time;
-        average_fps += delta;
-        //cout << "FPS: " << 1000.0/delta << endl;
-        if(step % 10 == 0) {
-            cout << "FPS: " << 1000.0/((float)average_fps/(float)step) << endl;
-            if(step >= 100) {
-                average_fps = (float)average_fps/(float)step;
-                step = 1;
-            }
-        }
         //For FPS on Screen
         char fps_string[32];
         float fps = 1000.0/(delta);
@@ -237,6 +233,14 @@ int main(int argc, char *argv[]) {
             }
             Shader::shader_type++;
         }
+        if(input.isPressed(KEY_LEFT)) {
+            Shader::ambient_factor += -0.01;
+            Shader::ambient_factor = max(Shader::ambient_factor, 0.0f);
+        }
+        if(input.isPressed(KEY_RIGHT)) {
+            Shader::ambient_factor += 0.01;
+            Shader::ambient_factor = min(Shader::ambient_factor, 0.1f);
+        }
 
 
         //input.getMouseDifference(mouse_x, mouse_y);
@@ -249,7 +253,12 @@ int main(int argc, char *argv[]) {
 
         //mesh drawing
         Matrix4f vp = camera.getViewProjection();
-        display.render_context.drawMesh(*mesh, vp, transform_mesh.getTransformation(), texture, draw_wireframe, false);
+        if(mesh == &mesh_data[7] || mesh == &mesh_data[8]) {
+            display.render_context.drawMesh(*mesh, vp, transform_mesh.getTransformation(), frank_tex, draw_wireframe, false);
+        }
+        else {
+            display.render_context.drawMesh(*mesh, vp, transform_mesh.getTransformation(), texture, draw_wireframe, false);
+        }
         display.render_context.drawMesh(terrainMesh, vp, terrain_transform.getTransformation(), texture2, draw_wireframe, false);
 
         //depth map displaying
@@ -283,76 +292,93 @@ int main(int argc, char *argv[]) {
 }
 
 void drawText(Display &display, TTF_Font *font, SDL_Color text_colour) {
-    int no_of_textBoxes = 13;
+    int no_of_textBoxes = 14;
     SDL_Surface *textSurface[no_of_textBoxes];
     for(int i = 0; i < no_of_textBoxes; i++) {
         textSurface[i] = NULL;
     }
+    int text_number = 0;
     SDL_Rect textLocation[no_of_textBoxes];
     int window_size_x = display.getWidth();
     int window_size_y = display.getHeight();
 
     //Actual Text Information
     //Left Side
-    textSurface[0] = TTF_RenderText_Blended(font, "WASD To Move", text_colour);
-    textLocation[0] = {0.2 * window_size_x, 0.07 * window_size_y, 0, 0};
+    textSurface[text_number] = TTF_RenderText_Blended(font, "WASD To Move", text_colour);
+    textLocation[text_number] = {0.2 * window_size_x, 0.07 * window_size_y, 0, 0};
 
-    textSurface[1] = TTF_RenderText_Blended(font, "Mouse To Turn", text_colour);
-    textLocation[1] = {0.2 * window_size_x, 0.11 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "Mouse To Turn", text_colour);
+    textLocation[text_number] = {0.2 * window_size_x, 0.11 * window_size_y, 0, 0};
 
-    textSurface[2] = TTF_RenderText_Blended(font, "1-9 For Different Models", text_colour);
-    textLocation[2] = {0.2 * window_size_x, 0.15 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "1-9 For Different Models", text_colour);
+    textLocation[text_number] = {0.2 * window_size_x, 0.15 * window_size_y, 0, 0};
 
     //Right Side
-    textSurface[3] = TTF_RenderText_Blended(font, "F To Toggle Wireframe Mode", text_colour);
-    textLocation[3] = {0.65 * window_size_x, 0.07 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "F To Toggle Wireframe Mode", text_colour);
+    textLocation[text_number] = {0.65 * window_size_x, 0.07 * window_size_y, 0, 0};
 
-    textSurface[4] = TTF_RenderText_Blended(font, "Z To Toggle Depth View", text_colour);
-    textLocation[4] = {0.65 * window_size_x, 0.11 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "Z To Toggle Depth View", text_colour);
+    textLocation[text_number] = {0.65 * window_size_x, 0.11 * window_size_y, 0, 0};
 
-    textSurface[5] = TTF_RenderText_Blended(font, "C To Toggle Mouse Capture", text_colour);
-    textLocation[5] = {0.65 * window_size_x, 0.15 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "C To Toggle Mouse Capture", text_colour);
+    textLocation[text_number] = {0.65 * window_size_x, 0.15 * window_size_y, 0, 0};
 
     //Middle
-    textSurface[6] = TTF_RenderText_Blended(font, "M To Toggle Different Shaders", text_colour);
-    textLocation[6] = {0.4215 * window_size_x, 0.07 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "M To Toggle Different Shaders", text_colour);
+    textLocation[text_number] = {0.4215 * window_size_x, 0.07 * window_size_y, 0, 0};
 
-    textSurface[7] = TTF_RenderText_Blended(font, "L To Stop Or Start Turning Of Light", text_colour);
-    textLocation[7] = {0.408 * window_size_x, 0.11 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "L To Stop Or Start Turning Of Light", text_colour);
+    textLocation[text_number] = {0.408 * window_size_x, 0.11 * window_size_y, 0, 0};
 
-    textSurface[8] = TTF_RenderText_Blended(font, "K and I To Rotate Light", text_colour);
-    textLocation[8] = {0.442 * window_size_x, 0.15 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "K and I To Rotate Light", text_colour);
+    textLocation[text_number] = {0.442 * window_size_x, 0.15 * window_size_y, 0, 0};
 
-    textSurface[9] = TTF_RenderText_Blended(font, "UP Arrow To Increase Camera Speed", text_colour);
-    textLocation[9] = {0.4 * window_size_x, 0.19 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "UP Arrow To Increase Camera Speed", text_colour);
+    textLocation[text_number] = {0.4 * window_size_x, 0.19 * window_size_y, 0, 0};
 
-    textSurface[10] = TTF_RenderText_Blended(font, "DOWN Arrow To Decrease Camera Speed", text_colour);
-    textLocation[10] = {0.386 * window_size_x, 0.23 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "DOWN Arrow To Decrease Camera Speed", text_colour);
+    textLocation[text_number] = {0.386 * window_size_x, 0.23 * window_size_y, 0, 0};
 
-    textSurface[11] = TTF_RenderText_Blended(font, "T TO Toggle Help", text_colour);
-    textLocation[11] = {0.45 * window_size_x, 0.27 * window_size_y, 0, 0};
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "Left And Right Keys To Change Ambient Occlusion", text_colour);
+    textLocation[text_number] = {0.36 * window_size_x, 0.27 * window_size_y, 0, 0};
+
+    text_number++;
+    textSurface[text_number] = TTF_RenderText_Blended(font, "T TO Toggle Help", text_colour);
+    textLocation[text_number] = {0.45 * window_size_x, 0.31 * window_size_y, 0, 0};
 
     //Bottom Left
     //Shader Information
+        text_number++;
         if(Shader::shader_type % Shader::no_of_shaders == 0) {
-            textSurface[12] = TTF_RenderText_Blended(font, "Shader: Texture + Lighting Smooth", text_colour);
+            textSurface[text_number] = TTF_RenderText_Blended(font, "Shader: Texture + Lighting Smooth", text_colour);
         }
         else if(Shader::shader_type % Shader::no_of_shaders == 1) {
-            textSurface[12] = TTF_RenderText_Blended(font, "Shader: Lighting Smooth Normals", text_colour);
+            textSurface[text_number] = TTF_RenderText_Blended(font, "Shader: Lighting Smooth Normals", text_colour);
         }
         else if(Shader::shader_type % Shader::no_of_shaders == 2) {
-            textSurface[12] = TTF_RenderText_Blended(font, "Shader: Lighting Flat Normals", text_colour);
+            textSurface[text_number] = TTF_RenderText_Blended(font, "Shader: Lighting Flat Normals", text_colour);
         }
         else if(Shader::shader_type % Shader::no_of_shaders == 3) {
-            textSurface[12] = TTF_RenderText_Blended(font, "Shader: Texture + Lighting Flat", text_colour);
+            textSurface[text_number] = TTF_RenderText_Blended(font, "Shader: Texture + Lighting Flat", text_colour);
         }
         else if(Shader::shader_type % Shader::no_of_shaders == 4) {
-            textSurface[12] = TTF_RenderText_Blended(font, "Shader: Normal Information Via Colour", text_colour);
+            textSurface[text_number] = TTF_RenderText_Blended(font, "Shader: Normal Information Via Colour", text_colour);
         }
         else if(Shader::shader_type == -1) {
-            textSurface[12] = TTF_RenderText_Blended(font, "Shader: Unlit", text_colour);
+            textSurface[text_number] = TTF_RenderText_Blended(font, "Shader: Unlit", text_colour);
         }
-        textLocation[12] = {0.01 * window_size_x, 0.96 * window_size_y, 0, 0};
+        textLocation[text_number] = {0.01 * window_size_x, 0.96 * window_size_y, 0, 0};
 
     // Pass zero for width and height to draw the whole surface
     for(int i = 0; i < no_of_textBoxes; i++) {

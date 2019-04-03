@@ -11,6 +11,9 @@
 #include "SDL.h"
 #include "colour.h"
 
+
+#include "stb_image.h"
+
 using namespace std;
 
 class Bitmap
@@ -50,9 +53,9 @@ class Bitmap
         virtual ~Bitmap();
 
     protected:
-        unsigned int m_width;
-        unsigned int m_height;
-        unsigned int m_channels;
+        int m_width;
+        int m_height;
+        int m_channels;
         Colour *m_components;
         SDL_Surface *m_image_surface;
 };

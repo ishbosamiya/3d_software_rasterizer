@@ -16,11 +16,11 @@ class Mesh
 {
     int no_of_positions;
     int no_of_texCoords;
-    int no_of_normals;
+    int no_of_normals_smooth;
     int no_of_faces;
     vector<Vector4f> m_positions;
     vector<Vector4f> m_texCoords;
-    vector<Vector4f> m_normals;
+    vector<Vector4f> m_normals_smooth;
     vector<Face> m_faces;
     bool is_initialized;
     char *m_file_name;
@@ -33,6 +33,9 @@ class Mesh
     void equateListToVector(vector<T> &m_vector, list<T> &m_list);
     template <typename T>
     T getElement(vector<T> &m_list, int index);
+
+    void calculateSmoothNormals();
+    void calculateFlatNormals();
 
     bool readMeshFromFile();
     bool writeMeshToFile();
@@ -47,11 +50,11 @@ class Mesh
         Face getFace(int loc) { return m_faces[loc];}
         Vector4f getPosition(int loc) { return m_positions[loc];}
         Vector4f getTexCoord(int loc) { return m_texCoords[loc];}
-        Vector4f getNormal(int loc) { return m_normals[loc];}
+        Vector4f getNormalSmooth(int loc) { return m_normals_smooth[loc];}
         vector<Face> &getFaces() { return m_faces;}
         vector<Vector4f> &getPositions() { return m_positions;}
         vector<Vector4f> &getTexCoords() { return m_texCoords;}
-        vector<Vector4f> &getNormals() { return m_normals;}
+        vector<Vector4f> &getNormalsSmooth() { return m_normals_smooth;}
         bool isInitialized() { return is_initialized;}
 
         virtual ~Mesh();

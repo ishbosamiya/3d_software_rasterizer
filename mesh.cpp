@@ -33,11 +33,11 @@ Mesh* Mesh::initialize(char *file_name) {
         obj.toIndexedModel(model);
         equateListToVector(m_positions, model.getPositions());
         equateListToVector(m_texCoords, model.getTexCoords());
-        equateListToVector(m_normals, model.getNormals());
+        equateListToVector(m_normals_smooth, model.getNormals());
         equateListToVector(m_faces, model.getFaces());
         no_of_positions = m_positions.size();
         no_of_texCoords = m_texCoords.size();
-        no_of_normals = m_normals.size();
+        no_of_normals_smooth = m_normals_smooth.size();
         no_of_faces = m_faces.size();
         writeMeshToFile();
         is_initialized = true;
@@ -54,11 +54,11 @@ Mesh* Mesh::initialize(char *file_name) {
             obj.toIndexedModel(model);
             equateListToVector(m_positions, model.getPositions());
             equateListToVector(m_texCoords, model.getTexCoords());
-            equateListToVector(m_normals, model.getNormals());
+            equateListToVector(m_normals_smooth, model.getNormals());
             equateListToVector(m_faces, model.getFaces());
             no_of_positions = m_positions.size();
             no_of_texCoords = m_texCoords.size();
-            no_of_normals = m_normals.size();
+            no_of_normals_smooth = m_normals_smooth.size();
             no_of_faces = m_faces.size();
             writeMeshToFile();
             is_initialized = true;
@@ -67,6 +67,7 @@ Mesh* Mesh::initialize(char *file_name) {
     cout << file_name << " has been loaded with " << no_of_faces << " no of faces" << endl;
     fin.close();
     delete temp;
+
     return this;
 }
 
@@ -84,7 +85,7 @@ bool Mesh::writeMeshToFile() {
 
     fout.write((char *)&no_of_positions, sizeof(no_of_positions));
     fout.write((char *)&no_of_texCoords, sizeof(no_of_texCoords));
-    fout.write((char *)&no_of_normals, sizeof(no_of_normals));
+    fout.write((char *)&no_of_normals_smooth, sizeof(no_of_normals_smooth));
     fout.write((char *)&no_of_faces, sizeof(no_of_faces));
     for(int i = 0; i < no_of_positions; i++) {
         Vector4f position = m_positions[i];
@@ -94,8 +95,8 @@ bool Mesh::writeMeshToFile() {
         Vector4f texCoord = m_texCoords[i];
         fout.write((char *)&texCoord, sizeof(texCoord));
     }
-    for(int i = 0; i < no_of_normals; i++) {
-        Vector4f normal = m_normals[i];
+    for(int i = 0; i < no_of_normals_smooth; i++) {
+        Vector4f normal = m_normals_smooth[i];
         fout.write((char *)&normal, sizeof(normal));
     }
     for(int i = 0; i < no_of_faces; i++) {
@@ -122,11 +123,11 @@ bool Mesh::readMeshFromFile() {
 
     fin.read((char *)&no_of_positions, sizeof(int));
     fin.read((char *)&no_of_texCoords, sizeof(int));
-    fin.read((char *)&no_of_normals, sizeof(int));
+    fin.read((char *)&no_of_normals_smooth, sizeof(int));
     fin.read((char *)&no_of_faces, sizeof(int));
     m_positions.reserve(no_of_positions);
     m_texCoords.reserve(no_of_texCoords);
-    m_normals.reserve(no_of_normals);
+    m_normals_smooth.reserve(no_of_normals_smooth);
     m_faces.reserve(no_of_faces);
     for(int i = 0; i < no_of_positions; i++) {
         Vector4f position;
@@ -138,10 +139,10 @@ bool Mesh::readMeshFromFile() {
         fin.read((char *)&texCoord, sizeof(Vector4f));
         m_texCoords.push_back(texCoord);
     }
-    for(int i = 0; i < no_of_normals; i++) {
+    for(int i = 0; i < no_of_normals_smooth; i++) {
         Vector4f normal;
         fin.read((char *)&normal, sizeof(Vector4f));
-        m_normals.push_back(normal);
+        m_normals_smooth.push_back(normal);
     }
     for(int i = 0; i < no_of_faces; i++) {
         Face face;
@@ -153,7 +154,60 @@ bool Mesh::readMeshFromFile() {
     is_initialized = true;
     fin.close();
     delete temp;
+
+    //calculateSmoothNormals();
+
     return true;
+}
+
+void Mesh::calculateFlatNormals() {
+
+}
+
+void Mesh::calculateSmoothNormals() {
+    vector<Vector4f> temp_normals;
+    temp_normals.reserve(no_of_positions);
+    for(int i = 0; i < m_positions.size(); i++) {
+        temp_normals.push_back(Vector4f(0, 0, 0, 0));
+    }
+
+    for(int i = 0; i < no_of_faces; i++) {
+        for(int j = 0; j < m_faces[i].getNumOfVerts(); j++) {
+            temp_normals[m_faces[i].getPosition(j)] = temp_normals[m_faces[i].getPosition(j)].add(m_positions[m_faces[i].getPosition(j)]);
+            m_faces[i].addNormal(j, m_faces[i].getPosition(j));
+        }
+    }
+
+    for(int i = 0; i < getNumOfFaces(); i++) {
+        vector<Vector4f> positions;
+        vector<int> positions_index;
+        int no_of_verts = getFace(i).getNumOfVerts();
+        positions.reserve(no_of_verts);
+        positions_index.reserve(no_of_verts);
+        for(int j = 0; j < no_of_verts; j++) {
+            Vector4f position = getPosition(getFace(i).getPosition(j));
+            positions.push_back(position);
+            positions_index.push_back(getFace(i).getPosition(j));
+        }
+        for(int j = 0; j < positions.size() - 2; j++) {
+            Vector4f p1 = positions[j + 1].sub(positions[0]);
+            Vector4f p2 = positions[j + 2].sub(positions[0]);
+            Vector4f n = p1.cross(p2);
+            temp_normals[positions_index[0]] = temp_normals[positions_index[0]].add(n);
+            temp_normals[positions_index[j + 1]] = temp_normals[positions_index[j + 1]].add(n);
+            temp_normals[positions_index[j + 2]] = temp_normals[positions_index[j + 2]].add(n);
+        }
+        positions.clear();
+        getFace(i).setNormals(positions_index);
+        positions_index.clear();
+    }
+
+    for(int i = 0; i < temp_normals.size(); i++) {
+        temp_normals[i] = temp_normals[i].normalized();
+    }
+
+    m_normals_smooth = temp_normals;
+    temp_normals.clear();
 }
 
 template <typename T>
@@ -181,6 +235,8 @@ void Mesh::equateListToVector(vector<T> &m_vector, list<T> &m_list) {
         m_vector.push_back(data);
     }
 }
+
+
 
 Mesh::~Mesh()
 {

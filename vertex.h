@@ -10,19 +10,25 @@ class Vertex
 {
     Vector4f m_pos;
     Vector4f m_texCoords;
-    Vector4f m_normal;
+    Vector4f m_normal_smooth;
+    Vector4f m_normal_flat;
 
     public:
         Vertex();
         Vertex(float x, float y, float z);
-        Vertex(Vector4f pos, Vector4f texCoords, Vector4f normal);
+        Vertex(Vector4f pos, Vector4f texCoords, Vector4f normal_smooth, Vector4f normal_flat);
+        void initialize(Vector4f pos, Vector4f texCoords, Vector4f normal_smooth, Vector4f normal_flat);
+
         float get(int index);
         float getX() {return m_pos.getX();}
         float getY() {return m_pos.getY();}
         Vector4f getPosition() {return m_pos;}
         Vector4f getTexCoords() {return m_texCoords;}
-        Vector4f getNormal() {return m_normal;}
-        void setNormal(Vector4f normal) {m_normal = normal;}
+        Vector4f getNormalSmooth() {return m_normal_smooth;}
+        Vector4f getNormalFlat() {return m_normal_flat;}
+        void setNormalSmooth(Vector4f normal) {m_normal_smooth = normal;}
+        void setNormalFlat(Vector4f normal) {m_normal_flat = normal;}
+
         float triangleArea(Vertex b, Vertex c);
         Vertex transform(Matrix4f transform_);
         Vertex transform(Matrix4f transform_, Matrix4f normal_transform);
