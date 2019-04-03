@@ -12,16 +12,42 @@
 #include "SDL_ttf.h"
 using namespace std;
 
-const int width = 1280 * 0.5;
-const int height = 720 * 0.5;
+const int width = 1280 * 0.9;
+const int height = 720 * 0.9;
 
 float toRadians(float angle) {
     return angle * 3.141592653 / 180.0;
 }
 
 void drawText(Display &display, TTF_Font *font, SDL_Color text_colour);
+void int_to_string(int value, char *result);
+void float_to_string(float value, char *result);
 
 int main(int argc, char *argv[]) {
+//    Display temp_display("Temp Display", width, height);
+//    Bitmap temp_bitmap("image2.bmp");
+//    SDL_Event temp_event;
+//    while(true) {
+//        if(SDL_PollEvent(&temp_event)) {
+//            switch(temp_event.type) {
+//                case SDL_QUIT:
+//                    return 0;
+//                case SDL_KEYDOWN:
+//                    switch(temp_event.key.keysym.sym) {
+//                        case SDLK_ESCAPE:
+//                            return 0;
+//                        default:
+//                            break;
+//                    }
+//                default:
+//                    break;
+//            }
+//        }
+//        temp_display.renderImage(temp_bitmap);
+//        SDL_UpdateWindowSurface(temp_display.window);
+//    }
+
+
     //For Text On Screen
     TTF_Init();
     //TTF_Font* font = TTF_OpenFont("arial.ttf", 14);
@@ -95,6 +121,24 @@ int main(int argc, char *argv[]) {
                 step = 1;
             }
         }
+        //For FPS on Screen
+        char fps_string[32];
+        float fps = 1000.0/(delta);
+        float_to_string(fps, fps_string);
+        char fps_string_final[32];
+        strcpy(fps_string_final, "FPS: ");
+        strcat(fps_string_final, fps_string);
+        SDL_Surface *text_fps_surface = NULL;
+        if(fps < 10) {
+            SDL_Color fps_colour = {255, 25, 25};
+            text_fps_surface = TTF_RenderText_Blended(font, fps_string_final, fps_colour);
+        }
+        else {
+            SDL_Color fps_colour = {25, 255, 25};
+            text_fps_surface = TTF_RenderText_Blended(font, fps_string_final, fps_colour);
+        }
+        SDL_Rect text_fps_location = {0, 0, 0, 0};
+
         float mov_amt = standard_mov_amt * delta;
         //input data
         input.event(event, capture_mouse);
@@ -196,6 +240,8 @@ int main(int argc, char *argv[]) {
         if(draw_help) {
             drawText(display, font, text_colour);
         }
+        //Drawing the fps counter
+        SDL_BlitSurface(text_fps_surface, NULL, display.screen_surface, &text_fps_location);
 
         //updating the window
         SDL_UpdateWindowSurface(display.window);
@@ -252,5 +298,35 @@ void drawText(Display &display, TTF_Font *font, SDL_Color text_colour) {
     //freeing memory
     for(int i = 0; i < no_of_textBoxes; i++) {
         SDL_FreeSurface(textSurface[i]);
+    }
+}
+
+void float_to_string(float value, char *result) {
+    ofstream fout;
+    fout.open("float_to_string_temp.txt");
+    fout << value;
+    fout.close();
+    ifstream fin;
+    fin.open("float_to_string_temp.txt");
+    fin.getline(result, 30);
+    fin.close();
+}
+
+void int_to_string(int value, char *result) {
+    char temp[32];
+    int iterator = 0;
+    while(value>0) {
+        temp[iterator] = value % 10 + (int)'0';
+        value /= 10;
+        iterator++;
+    }
+    temp[iterator] = '\0';
+    result[iterator] = '\0';
+    iterator--;
+    int reverse_iterator = 0;
+    while(iterator >= 0) {
+        result[reverse_iterator] = temp[iterator];
+        reverse_iterator++;
+        iterator--;
     }
 }

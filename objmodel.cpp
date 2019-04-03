@@ -183,6 +183,7 @@ char** OBJModel::getSplit(char *data, char delimiter) {
             repeater++;
         }
     }
+    result[line_no][repeater] = '\0';
     return result;
 }
 

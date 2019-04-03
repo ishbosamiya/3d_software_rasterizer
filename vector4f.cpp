@@ -8,11 +8,25 @@ Vector4f::Vector4f()
     w = 0;
 }
 
+Vector4f::Vector4f(float x, float y, float z) {
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    this->w = 0;
+}
+
 Vector4f::Vector4f(float x, float y, float z, float w) {
     this->x = x;
     this->y = y;
     this->z = z;
     this->w = w;
+}
+
+void Vector4f::initialize(float x, float y, float z) {
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    this->w = 0;
 }
 
 void Vector4f::initialize(float x, float y, float z, float w) {
@@ -138,6 +152,22 @@ float Vector4f::getZ() {
 
 float Vector4f::getW() {
     return w;
+}
+
+void Vector4f::setX(float value) {
+    x = value;
+}
+
+void Vector4f::setY(float value) {
+    y = value;
+}
+
+void Vector4f::setZ(float value) {
+    z = value;
+}
+
+void Vector4f::setW(float value) {
+    w = value;
 }
 
 bool Vector4f::operator == (Vector4f r) {

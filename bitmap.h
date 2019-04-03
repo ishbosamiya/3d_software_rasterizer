@@ -4,6 +4,9 @@
 #include <limits>
 #include <iostream>
 #include <string.h>
+#include <fstream>
+#include <bitset>
+#include <algorithm>
 
 #include "SDL.h"
 #include "colour.h"
@@ -15,7 +18,7 @@ class Bitmap
     public:
         Bitmap();
         Bitmap(const Bitmap &obj);
-        //Bitmap(char *file_name);
+        Bitmap(char *file_name);
         Bitmap(unsigned int width, unsigned int height);
         virtual void initialize(unsigned int width, unsigned int height);
         //to get the sdl surface of the image

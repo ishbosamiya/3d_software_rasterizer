@@ -55,6 +55,69 @@ Uint32 Bitmap::getPixel32( SDL_Surface *surface, int x, int y ) {
     return value;
 }
 
+Bitmap::Bitmap(char *file_name) {
+    SDL_Surface *image = SDL_LoadBMP(file_name);
+    if(image == NULL) {
+        cout << "Could Not Load Image!!!" << endl;
+        initialize(512, 512);
+        generateNoise();
+        return;
+    }
+    m_image_surface = image;
+
+    m_width = image->w;
+    m_height = image->h;
+    cout << "width: " << m_width << endl;
+    cout << "height: " << m_height << endl;
+
+    m_components = new Colour[m_width * m_height];
+    SDL_LockSurface(image);
+
+    //Uint32 *pixels = (Uint32 *)image->pixels;
+    Uint32 *pixels = (Uint32 *)m_image_surface->pixels;
+    cout << pixels[m_width * m_height - 2501] << endl;
+
+    //copy_n(pixels, m_width * m_height, (Uint32 *)m_components);
+    //memcpy((void *)m_components, (void *)pixels, m_width * m_height);
+    memcpy((void *)m_components, (void *)pixels, m_width * m_height * sizeof(*m_components));
+//    for(int i = 0; i < m_width * m_height; i++) {
+//        m_components[i].packed = pixels[i];
+//    }
+
+    //storing as ppm
+    char *temp = new char[1000];
+    strcpy(temp, file_name);
+    strcat(temp, ".ppm");
+    ofstream fout;
+    fout.open(temp);
+    fout << "P3" << endl;
+    fout << m_width << " " << m_height << endl;
+    fout << "255" << endl;
+    for(int y = 0; y < m_height; y++) {
+        for(int x = 0; x < m_width; x++) {
+            int index = x + y * m_width;
+            fout << (int)m_components[index].r << " ";
+            fout << (int)m_components[index].g << " ";
+            fout << (int)m_components[index].b << " ";
+        }
+        fout << endl;
+    }
+
+    fout.close();
+    fout.open("temp_data.txt");
+    for(int i = 0; i < m_width * m_height; i++) {
+        long int component_temp;
+        memcpy(&component_temp, &m_components[i], sizeof(long int));
+        bitset<32> p(component_temp);
+        fout << p << endl;
+    }
+
+    m_channels = 4;
+    cout << "Image has been Loaded" << endl;
+
+    SDL_UnlockSurface(image);
+}
+
 //Bitmap::Bitmap(char *file_name) {
 //    have_surface = true;
 //    SDL_Surface *image = SDL_LoadBMP(file_name);
@@ -93,9 +156,8 @@ void Bitmap::initialize(unsigned int width, unsigned int height) {
     m_image_surface = NULL;
 }
 
-
-//need to fix this
 SDL_Surface* Bitmap::getSurface() {
+    //return m_image_surface;
     //to get the sdl surface to the image
     SDL_FreeSurface(m_image_surface);
     m_image_surface = SDL_CreateRGBSurfaceFrom((void *)m_components,
@@ -142,6 +204,8 @@ void Bitmap::generateNoise() {
     for(int x = 0; x < m_width; x++) {
         for(int y = 0; y < m_height; y++) {
             Colour temp_colour;
+            //for craziness, enable alpha as some random other number
+//            temp_colour.fill((char)(rand()%255), (char)(rand()%255), (char)(rand()%255), (char)(150));
             temp_colour.fill((char)(rand()%255), (char)(rand()%255), (char)(rand()%255), 255);
             drawPixel(x, y, temp_colour);
         }

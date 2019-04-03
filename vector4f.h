@@ -17,8 +17,11 @@ class Vector4f
 
     public:
         Vector4f();
+        Vector4f(float x, float y, float z);
         Vector4f(float x, float y, float z, float w);
+        void initialize(float x, float y, float z);
         void initialize(float x, float y, float z, float w);
+
         float length();
         float max();
         float dot(Vector4f r);
@@ -40,6 +43,10 @@ class Vector4f
         float getY();
         float getZ();
         float getW();
+        void setX(float value);
+        void setY(float value);
+        void setZ(float value);
+        void setW(float value);
         Vector4f returnThis();
         bool operator == (Vector4f r);
         ~Vector4f();
